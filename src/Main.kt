@@ -1,5 +1,7 @@
 import days.one.solveFirstStar
+import days.two.solveSecondDayFirstStar
 
 fun main() {
-    solveFirstStar()
+//    solveFirstStar()
+    solveSecondDayFirstStar()
 }

@@ -3,26 +3,23 @@ package days.one
 import java.io.File
 import kotlin.math.abs
 
-
 fun solveFirstStar() {
     val lines =
         File("src/days/one/src1.txt")
             .readLines()
-                .map {
-            val (left, right) = it.split("   ")
-            Pair(left.toLong(), right.toLong())
-        }
-            .fold(Pair(mutableListOf<Long>(), mutableListOf<Long>())) {
-                    (leftList, rightList),
-                    (leftValue, rightValue) ->
+            .map {
+                val (left, right) = it.split("   ")
+                Pair(left.toLong(), right.toLong())
+            }
+            .fold(Pair(mutableListOf<Long>(), mutableListOf<Long>())) { (leftList, rightList),
+                                                                        (leftValue, rightValue) ->
                 leftList.add(leftValue)
                 rightList.add(rightValue)
                 Pair(leftList, rightList)
             }
             .let { (first, second) -> Pair(first.sorted(), second.sorted()) }
             .let { (first, second) -> first.zip(second) }
-            .map { (first, second) -> abs(first - second) }
-            .sum()
+            .sumOf { (first, second) -> abs(first - second) }
 
     // val lines = File("./src1.txt")
     // .readLines()
