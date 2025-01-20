@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Powerseq vs. Other Libraries</title>
+
 <style>
   body {
     font-family: sans-serif;
@@ -10,6 +7,11 @@
     border-collapse: collapse;
     width: 100%;
     table-layout: fixed;
+  }
+  tbody {
+/*     max-height: 800px; */
+    height: 500px;
+    overflow: scroll;
   }
   th, td {
     border: 1px solid black;
@@ -61,8 +63,6 @@
     z-index: 3;
   }
 </style>
-</head>
-<body>
 
 <div class="sticky-header">Powerseq vs. Other Libraries</div>
 
@@ -163,5 +163,3 @@
   </tbody>
 </table>
 
-</body>
-</html>
