@@ -9,7 +9,7 @@ import kotlin.math.abs
 // 369 good
 
 fun solveSecondDayFirstStar() {
-    tests()
+//    tests()
     val result =
         File("src/days/two/src1.txt")
             .readLines()
