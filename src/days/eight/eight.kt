@@ -9,16 +9,16 @@ typealias Vector = Pair<Int,Int>
 data class Node(val point: Point,val type: Char) {}
 // 338 too high
 // 332
+
 fun solveEighthDayFirstStar() {
     val grid =
         File("src/days/eight/src1.txt")
             .readLines()
             .map { it.split("").filter { it != "" }.map { it.first()} }
     
-    val antennas  = findInGrid(grid) { it != '.' && it != '#'}
-    val antennasGroups = antennas.groupBy { it.type }
-    val allPairwiseGroupPoints = collectAllPairwisePoints(antennasGroups)
-    var res = allPairwiseGroupPoints
+    val res  = findInGrid(grid) { it != '.' && it != '#'}
+        .groupBy { it.type }
+        .let { collectAllPairwisePoints(it) }
         .mapValues { (_, points) -> points.flatMap {
             val diff = calculateDifferenceVector(it)
             calculateAnitNodesCoordinates(it,diff).toList()
@@ -28,12 +28,10 @@ fun solveEighthDayFirstStar() {
         .distinct()
 
     println("Result size: ${res.size}")
-
 }
 
 fun isPointInGrid(grid: List<List<Char>>, point: Point) =
     point.row in 0 until grid.size && point.column in 0 until grid[0].size
-
 
 fun findInGrid(grid: List<List<Char>>, isChar: (c: Char) -> Boolean): List<Node> =
      grid.foldIndexed(mutableListOf()) { row, acc, cur ->
