@@ -11,7 +11,8 @@ fun main() {
 //    solveSecondDayFirstStar()
 //    val input = "ABC".toCharArray()
 //    permute(input, 0)
-    solveNinethDayFirstStar()
+//    solveNinethDayFirstStar()
+    solveNinethDaySecondStar()
 }
 
 
