@@ -1,7 +1,4 @@
 package days.ten
-
-import days.six.column
-import days.six.row
 import java.io.File
 
 typealias Grid = List<List<Char>>
@@ -23,49 +20,44 @@ val directionsOpposite = mapOf(
     left to right,
     right to left
 )
-val start = '0'
-val end = '9'
+const val start = '0'
+const val end = '9'
 
 val nextChar = (start..end).zipWithNext().toMap()
 // 517 *
 
 fun solveTenthDayFirstStar() {
-    val grid =
-        File("src/days/ten/src1.txt")
-            .readLines()
-            .map { formatInputToGrid(it) }
-
-
-    val startPoints = findStarts(grid)
-    val test = startPoints.sumOf {
-        findPathsInGrid(
-            grid,
-            it.row,
-            it.column,
-            Array(grid.size) { BooleanArray(grid[0].size) { false } },
-            mutableListOf(),
-            null,
-            null
-        ).distinct().size
+    val test = getGrid().let { grid ->
+        findStarts(grid).sumOf { (row, column) ->
+            val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
+            findPathsInGrid(
+                grid,
+                row,
+                column,
+                visited,
+                null,
+                null
+            ).distinct().size
+        }
     }
+
     println(test)
 }
 
 fun solveTenthDaySecondStar() {
-    val grid = getGrid()
-    println(findStarts(grid))
-    val start = findStarts(grid).map {
-        findPathsInGrid2(
-            grid,
-            it.row,
-            it.column,
-            mutableListOf(),
-            null,
-            null
-        ).size
-    }.sum()
+    val res = getGrid().let { grid ->
+        findStarts(grid).sumOf { (row, column) ->
+            findPathsInGrid2(
+                grid,
+                row,
+                column,
+                null,
+                null
+            ).size
+        }
+    }
 
-    println(start)
+    println(res)
 }
 
 fun getGrid() = File("src/days/ten/src1.txt")
@@ -81,7 +73,6 @@ fun findPathsInGrid(
     row: Row,
     column: Column,
     visited: Array<BooleanArray>,
-    track: MutableList<Char>,
     lastValue: Char?,
     dir: Dir?
 ): List<Point> {
@@ -103,8 +94,6 @@ fun findPathsInGrid(
 
     // znalezlismy sciezke
     if (currentVal == end) {
-//        println("$row $column")
-//        println(track)
         return listOf(row to column)
     }
 
@@ -113,14 +102,11 @@ fun findPathsInGrid(
     }
 
     visited[row][column] = true
-
-    track += currentVal
-    var points = mutableListOf<Point>()
+    var points = listOf<Point>()
     val dirs = if (dir != null) directions.filter { directionsOpposite[dir] != it } else directions
     for (nextDir in dirs) {
         val (dr, dc) = nextDir
-        points += findPathsInGrid(grid, row + dr, column + dc, visited, track, currentVal, nextDir)
-
+        points += findPathsInGrid(grid, row + dr, column + dc, visited, currentVal, nextDir)
     }
     return points
 }
@@ -144,7 +130,6 @@ fun findPathsInGrid2(
     grid: Grid,
     row: Row,
     column: Column,
-    track: MutableList<Char>,
     lastValue: Char?,
     dir: Dir?
 ): List<Point> {
@@ -166,17 +151,15 @@ fun findPathsInGrid2(
 
     // znalezlismy sciezke
     if (currentVal == end) {
-        println("track $track")
         return listOf(row to column)
     }
 
 
-    track += currentVal
-    val points = mutableListOf<Point>()
+    var points = listOf<Point>()
     val dirs = if (dir != null) directions.filter { directionsOpposite[dir] != it } else directions
     for (nextDir in dirs) {
         val (dr, dc) = nextDir
-        points += (findPathsInGrid2(grid, row + dr, column + dc, track, currentVal, nextDir))
+        points += (findPathsInGrid2(grid, row + dr, column + dc, currentVal, nextDir))
     }
     return points
 }
