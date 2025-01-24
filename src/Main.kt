@@ -5,6 +5,7 @@ import days.two.solveSecondDayFirstStar
 import days.four.solveFourthDayFirstStar
 import days.seven.solveSeventhDayFirstStar
 import days.six.solveSixDayFirstStar
+import days.ten.solveTenthDayFirstStar
 
 fun main() {
 //    solveFirstStar()
@@ -12,7 +13,7 @@ fun main() {
 //    val input = "ABC".toCharArray()
 //    permute(input, 0)
 //    solveNinethDayFirstStar()
-    solveNinethDaySecondStar()
+    solveTenthDayFirstStar()
 }
 
 
