@@ -53,20 +53,24 @@ fun solveTenthDayFirstStar() {
 
 fun solveTenthDaySecondStar() {
     val grid = getGrid()
-    val start = findStarts(grid).first().let {  findPathsInGrid2(
-        grid,
-        it.row,
-        it.column,
-        mutableListOf(),
-        null,
-        null) }
+    println(findStarts(grid))
+    val start = findStarts(grid).map {
+        findPathsInGrid2(
+            grid,
+            it.row,
+            it.column,
+            mutableListOf(),
+            null,
+            null
+        ).size
+    }.sum()
 
     println(start)
 }
 
 fun getGrid() = File("src/days/ten/src1.txt")
-            .readLines()
-            .map { formatInputToGrid(it) }
+    .readLines()
+    .map { formatInputToGrid(it) }
 
 
 fun formatInputToGrid(input: String): List<Char> =
@@ -162,25 +166,17 @@ fun findPathsInGrid2(
 
     // znalezlismy sciezke
     if (currentVal == end) {
-//        println("$row $column")
-//        println(track)
+        println("track $track")
         return listOf(row to column)
     }
 
-//    if (visited[row][column]) {
-//        return emptyList()
-//    }
-//
-//    visited[row][column] = true
 
     track += currentVal
-    var points = mutableListOf<Point>()
+    val points = mutableListOf<Point>()
     val dirs = if (dir != null) directions.filter { directionsOpposite[dir] != it } else directions
     for (nextDir in dirs) {
         val (dr, dc) = nextDir
-        points += findPathsInGrid2(grid, row + dr, column + dc, track, currentVal, nextDir)
-//        points += findPathsInGrid(grid, row + dr, column + dc, visited, track, currentVal, nextDir)
-
+        points += (findPathsInGrid2(grid, row + dr, column + dc, track, currentVal, nextDir))
     }
     return points
 }
