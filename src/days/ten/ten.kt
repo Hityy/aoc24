@@ -26,64 +26,90 @@ val start = '9'
 val end = '0'
 
 val nextChar = (start downTo end).zipWithNext().toMap()
-//val previousChar = (end .. start).zipWithNext().toMap()
+val previousChar = (end .. start).zipWithNext().toMap()
 
 fun solveTenthDayFirstStar() {
-    val result =
-        File("src/days/ten/testR2.txt")
+    val grid =
+        File("src/days/ten/testR12.txt")
             .readLines()
             .map { formatInputToGrid(it) }
 
-    println(result)
+    println(grid)
     println(nextChar)
 //    println(previousChar)
-    val startPoints = findStarts(result)
+    val startPoints = findStarts(grid)
     println(startPoints)
 
 
-    if(startPoint != null) {
-        val test = findPathsInGrid(result,startPoint.row,startPoint.column, null)
-        println(test)
+    val test = startPoints.filter {
+        findPathsInGrid(
+            grid,
+            it.row,
+            it.column,
+            Array(grid.size) { BooleanArray(grid[0].size) { false } },
+            '8',
+            null
+        )
     }
-
+    println(test)
+//    val first9 = startPoints[0]
+//    println(first9)
+//    val testfirst9 = findPathsInGrid(grid,first9.row,first9.column,Array(grid.size) { BooleanArray(grid[0].size) { false } },'8',null)
+//    println(testfirst9)
+//    val s9 = startPoints[1]
+//
+//    val testS9 = findPathsInGrid(grid,s9.row,s9.column, Array(grid.size) { BooleanArray(grid[0].size) { false } },null)
+//    println(testS9)
 }
 
 fun formatInputToGrid(input: String):  List<Char> =
     input.split("").filter { it != "" }.map { it.first()}
 
-fun findPathsInGrid(grid: Grid,row: Row, column: Column,dir: Dir?): Int {
+fun findPathsInGrid(grid: Grid,row: Row, column: Column,visited: Array<BooleanArray>,lastValue: Char, dir :Dir?): Boolean {
 
     // czy wyjdziemy poza grid
     if(row !in 0 until grid.size || column !in 0 until grid[0].size) {
-        return 0
+        return false
     }
 
     val currentVal = grid[row][column]
     // czy wchodzimy na kropke
     if(currentVal == '.') {
-        return 0
+        return false
+    }
+
+    println("$currentVal, $currentVal == ${nextChar[lastValue]}")
+    if(currentVal != start && currentVal != nextChar[lastValue]) {
+        return false
     }
 
     // znalezlismy sciezke
-    if(currentVal == end) {
-        return 1
+    if(currentVal == end ) {
+        return true
     }
 
+    if(visited[row][column]) {
+        return false
+    }
+
+    visited[row][column] = true
+
     val nextValue = nextChar[currentVal]
+
+    println("$nextValue")
     if(nextValue != null) {
-//        println("$nextValue")
+            println("$currentVal row $row column $column")
 //        println("$nextChar")
-        var counter = 0
+//        var counter = 0
         val dirs = if(dir != null) directions.filter { directionsOpposite[dir] != it } else directions
 
 //            println("$dir ${directionsOpposite[dir]}, ${directions.filter { directionsOpposite[dir] != it }}")
         for(nextDir in dirs) {
             val (dr,dc) = nextDir
-            if(findPathsInGrid(grid,row+dr,column+dc, nextDir) != 0)
-                counter++
-
+            if(findPathsInGrid(grid,row+dr,column+dc,visited,currentVal, nextDir))
+                return true
         }
-        return counter
+
     }
 
 //    val nextVal = nextChar[currentVal]
@@ -91,7 +117,7 @@ fun findPathsInGrid(grid: Grid,row: Row, column: Column,dir: Dir?): Int {
 //    if(currentVal {
 //    }
 
-    return 0
+    return false
 }
 
 fun findStarts(grid: Grid): List<Point> {
