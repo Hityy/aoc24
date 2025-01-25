@@ -2,6 +2,7 @@
 import kotlin.math.log10
 import kotlin.math.pow
 
+var blinked = 0
 fun solveElevenDayFirstStar() {
     tests()
     val test1 = "0 1 10 99 999"
@@ -13,9 +14,23 @@ fun solveElevenDayFirstStar() {
         val stones = parseInputToStones(src1).map{ Stone(it.toLong()) }
         println(stones)
 
-        val restest1 = blinkStones1(stones, 75)
+        val stonesBlinked25Times = blinkStones1(stones, 15)
+        val stonesChunked1 = stonesBlinked25Times.chunked(128)
 
-        println(restest1.size)
+
+        val aggregate = mutableListOf<Stone>()
+        for(chunk1 in stonesChunked1) {
+            val stonesChunked2 = blinkStones1(chunk1,10).chunked(128)
+            val aggregate2 = mutableListOf<List<Stone>>()
+//            for(chunk2 in stonesChunked2) {
+//                aggregate2 += blinkStones1(chunk2,5)
+//            }
+//            aggregate += aggregate2.flatten()
+            aggregate += stonesChunked2.flatten()
+        }
+        println("blinked $blinked")
+        println(aggregate)
+        println(aggregate.size)
 }
 
 
@@ -92,20 +107,17 @@ fun splitStone(stone: Stone): List<Stone> {
 //
 //}
 
-fun blinkStones1(initalStones: List<Stone>, repeat: Long): List<Stone> {
+
+fun blinkStones1(initalStones: List<Stone>, repeat: Int): List<Stone> {
     val stonesMutable = initalStones.toMutableList()
-    for (r in 0 until repeat) {
+    repeat(repeat, { r ->
+        blinked++
         val whereReplace = mutableMapOf<Int,List<Stone>>()
         for (stoneIndex in stonesMutable.indices) {
             val stone = stonesMutable[stoneIndex]
             when {
                 stone.isZero -> flipStone(stone)
-                stone.isEven -> {
-//                    val newStones = stone.split().map { Stone(it) }
-                    whereReplace[stoneIndex] = splitStone(stone)
-//                    val a = newStones.map { Stone(it) }
-//                    println("new stones $a")
-                }
+                stone.isEven -> { whereReplace[stoneIndex] = splitStone(stone) }
                 else -> multiply(stone)
             }
         }
@@ -120,12 +132,15 @@ fun blinkStones1(initalStones: List<Stone>, repeat: Long): List<Stone> {
             whereReplace.clear()
         }
 
-//        println(stonesMutable)
         println("age: ${r+1} stones: ${stonesMutable.size}")
+    })
+//    for (r in 0 until repeat) {
+
+//        println(stonesMutable)
 //        if(stonesMutable.size > 10000) {
 //
 //        }
-    }
+//    }
     return stonesMutable
 }
 
