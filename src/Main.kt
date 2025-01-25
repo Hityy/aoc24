@@ -1,20 +1,10 @@
-import days.eight.solveEighthDayFirstStar
-import days.five.solveFiveDayFirstStar
-import days.one.solveFirstStar
-import days.two.solveSecondDayFirstStar
-import days.four.solveFourthDayFirstStar
-import days.seven.solveSeventhDayFirstStar
-import days.six.solveSixDayFirstStar
-import days.ten.solveTenthDayFirstStar
-import days.ten.solveTenthDaySecondStar
-
 fun main() {
 //    solveFirstStar()
 //    solveSecondDayFirstStar()
 //    val input = "ABC".toCharArray()
 //    permute(input, 0)
 //    solveNinethDayFirstStar()
-    solveTenthDayFirstStar()
+    solveElevenDayFirstStar()
 }
 
 
