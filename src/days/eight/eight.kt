@@ -75,3 +75,38 @@ fun collectAllPairwise(list: List<Int>) : List<Pair<Int,Int>> =
 //    val expectedAntinodes = antiNodes.map { it.point }
 //    println("all expected antinodes = $expectedAntinodes")
 //    println("all expected antinodes size = ${expectedAntinodes.size}")
+
+// **
+
+fun solveEightDaySecondStart() {
+    val grid =
+        File("src/days/eight/src1.txt")
+            .readLines()
+            .map { it.split("").filter { it != "" }.map { it.first()} }
+    val res  = findInGrid(grid) { it != '.' && it != '#'}
+        .groupBy { it.type }
+        .let { collectAllPairwisePoints(it) }
+        .mapValues { (_, points) -> points.flatMap { pair -> generateAntinodes(pair, calculateDifferenceVector(pair),grid) } }
+        .values.flatten()
+        .distinct()
+
+    println(res.size)
+
+}
+
+fun generateAntinodes(points: Pair<Point,Point>, differenceVector: Vector, grid: List<List<Char>>) =
+            generateAntinodesInDirection(points.first,differenceVector,grid) {(row,col),(dr,dc ) -> (row - dr) to (col - dc)} +
+            generateAntinodesInDirection(points.second,differenceVector,grid) {(row,col),(dr,dc ) -> (row + dr) to (col + dc)}
+
+
+fun generateAntinodesInDirection(point: Point, differenceVector: Vector, grid: List<List<Char>>, calcNewPoint: (point: Point, vector: Vector) -> Point): List<Point> {
+    val antinodes = mutableListOf(point)
+
+    while(true) {
+        val antinode = calcNewPoint(antinodes.last(),differenceVector)
+
+        if(isPointInGrid(grid,antinode)) antinodes += antinode
+        else break
+    }
+    return antinodes
+}
