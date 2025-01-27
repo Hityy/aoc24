@@ -1,9 +1,11 @@
 package days.six
+
 import java.io.File
 
 val guard = '^'
 val obstacle = '#'
-        //row to column
+
+//row to column
 val up = -1 to 0
 val right = 0 to 1
 val down = 1 to 0
@@ -22,27 +24,28 @@ fun solveSixDayFirstStar() {
     val result =
         File("src/days/six/src1.txt")
             .readLines()
-            .map { it.split("").filter { it != "" }.map { it.first()} }
+            .map { it.split("").filter { it != "" }.map { it.first() } }
             .let { countPositions(it) }
 
     println("Result: $result")
 }
 
 fun solveSixDaySecondStar() {
-    val grid = File("src/days/six/test21.txt")
-            .readLines()
-            .map { it.split("").filter { it != "" }.map { it.first()} }
+    val grid = File("src/days/six/test.txt")
+        .readLines()
+        .map { it.split("").filter { it != "" }.map { it.first() } }
 
-    val guardInitialPosition = findGuardPosition(grid)!!
-
-    val path = getPath(
-        grid,guardInitialPosition.row,
-        guardInitialPosition.column,
-        listOf(guardInitialPosition),
-        up,
-        (mutableListOf<Pair<Int,Int>>() to mutableListOf())
-    )
-    println(path)
+    val res = countPossibleLoops(grid)
+    println(res)
+//    val guardInitialPosition = findGuardPosition(grid)!!
+//    val path = getPath(
+//        grid,guardInitialPosition.row,
+//        guardInitialPosition.column,
+//        listOf(guardInitialPosition),
+//        up,
+//        (mutableListOf<Pair<Int,Int>>() to mutableListOf())
+//    )
+//    println(path)
 
 //            .let { countPositions(it) }
 
@@ -61,7 +64,7 @@ fun solveSixDaySecondStar() {
 
 fun countPositions(grid: List<List<Char>>): Int {
     val guardInitialPosition = findGuardPosition(grid)
-    if(guardInitialPosition != null) {
+    if (guardInitialPosition != null) {
         val positions = traverseInGridByDir(
             grid,
             guardInitialPosition.row,
@@ -74,11 +77,17 @@ fun countPositions(grid: List<List<Char>>): Int {
     return 0
 }
 
-fun traverseInGridByDir(grid: List<List<Char>>, row: Int, column: Int, positions: List<Pair<Int,Int>>, dir: Pair<Int,Int>): List<Pair<Int,Int>> {
+fun traverseInGridByDir(
+    grid: List<List<Char>>,
+    row: Int,
+    column: Int,
+    positions: List<Pair<Int, Int>>,
+    dir: Pair<Int, Int>
+): List<Pair<Int, Int>> {
     if (row !in 0..<grid.size || column !in 0..<grid[0].size)
         return positions.dropLast(1)
 
-    if(obstacle == grid[row][column]) {
+    if (obstacle == grid[row][column]) {
         val nextDir = nextDirs.get(dir)!!
         val nextPosition = (row + nextDir.row - dir.row) to (column + nextDir.column - dir.column)
         return traverseInGridByDir(
@@ -94,10 +103,10 @@ fun traverseInGridByDir(grid: List<List<Char>>, row: Int, column: Int, positions
     return traverseInGridByDir(grid, nextPosition.row, nextPosition.column, positions + nextPosition, dir)
 }
 
-fun findGuardPosition(grid: List<List<Char>>): Pair<Int,Int>? {
-    for(row in grid.indices) {
-        for(column in grid[0].indices) {
-            if(guard == grid[row][column]) {
+fun findGuardPosition(grid: List<List<Char>>): Pair<Int, Int>? {
+    for (row in grid.indices) {
+        for (column in grid[0].indices) {
+            if (guard == grid[row][column]) {
                 return row to column
             }
         }
@@ -108,84 +117,130 @@ fun findGuardPosition(grid: List<List<Char>>): Pair<Int,Int>? {
 val <T, A> Pair<T, A>.row: T
     get() = this.first
 
-val <T,A>Pair<T,A>.column: A
+val <T, A>Pair<T, A>.column: A
     get() = this.second
 
 // --- **
 //val loopCache = Pair(mutableListOf<Pair<Int,Int>>(),mutableListOf<Pair<Int,Int>>())
 
-fun getPath(grid: List<List<Char>>,
-            row: Int, column: Int,
-            positions: List<Pair<Int,Int>>,
-            dir: Pair<Int,Int>,loopCache: Pair<MutableList<Pair<Int,Int>>,
-            MutableList<Pair<Int,Int>>>): Boolean {
-    if (row !in 0..<grid.size || column !in 0..<grid[0].size)
-        return false
-
-    val currentPoint = Pair(row,column)
-    if(isLoop(currentPoint,positions,loopCache)) {
-        return true
+fun countPossibleLoops(grid: List<List<Char>>): Int {
+    val guardInitialPosition = findGuardPosition(grid)
+//    println(guardInitialPosition)
+    if (guardInitialPosition != null) {
+        return getLoopPaths(
+            grid,
+            guardInitialPosition.row,
+            guardInitialPosition.column,
+            listOf(guardInitialPosition),
+            up,
+            0
+        )
     }
+    return 0
+}
 
-    if(obstacle == grid[row][column]) {
+fun getLoopPaths(
+    grid: List<List<Char>>,
+//    gridRef: List<List<Char>>,
+    row: Int, column: Int,
+    positions: List<Pair<Int, Int>>,
+    dir: Pair<Int, Int>,
+    counter: Int,
+): Int {
+    if (row !in 0..<grid.size || column !in 0..<grid[0].size)
+        return counter
+
+    val newGrid = grid.map { it.toMutableList() }.toMutableList()
+    if (obstacle == grid[row][column]) {
         val nextDir = nextDirs.get(dir)!!
         val nextPosition = (row + nextDir.row - dir.row) to (column + nextDir.column - dir.column)
 
+        newGrid[nextPosition.row][nextPosition.column] = '#'
+        val isNextInLoop = isInLoopPath(newGrid, row, column, positions, dir, getEmptyLoopCache())
 
-        return getPath(
+        return getLoopPaths(
             grid,
             nextPosition.row,
             nextPosition.column,
             positions.dropLast(1) + nextPosition,
             nextDir,
-            loopCache
+            if (isNextInLoop) counter + 1 else counter
         )
     }
 
     val nextPosition = (row + dir.row) to (column + dir.column)
-    return getPath(grid, nextPosition.row, nextPosition.column, positions + nextPosition, dir,loopCache)
+//    val isNextInLoop = isInLoopPath(grid, nextPosition.row, nextPosition.column, positions, dir, getEmptyLoopCache())
+//
+    if (nextPosition.row !in 0..<grid.size || nextPosition.column !in 0..<grid[0].size) {
+        return getLoopPaths(
+            grid,
+            nextPosition.row,
+            nextPosition.column,
+            positions + nextPosition,
+            dir,
+            counter
+        )
+    }
+
+    newGrid[nextPosition.row][nextPosition.column] = '#'
+    val isNextInLoop = isInLoopPath(newGrid, row, column, positions, dir, getEmptyLoopCache())
+
+    return getLoopPaths(
+        grid,
+        nextPosition.row,
+        nextPosition.column,
+        positions + nextPosition,
+        dir,
+        if (isNextInLoop) counter + 1 else counter
+    )
 }
 
-//fun isInLoop(grid: List<List<Char>>,path: List<Pair<Int,Int>>): Boolean {
-//    val initialPointInPath = path.first()
-//    val maybeLoopPath = getPath(grid,initialPointInPath.row,initialPointInPath.column, listOf(initialPointInPath),up)
-//    return maybeLoopPath == path
-//}
-//
 
-fun isLoop(currentPoint: Pair<Int,Int>,positions: List<Pair<Int,Int>>, loopCache: Pair<MutableList<Pair<Int, Int>>, MutableList<Pair<Int, Int>>>): Boolean {
-    if(positions.contains(currentPoint)) {
-        val firstLoop = loopCache.first
-        if(firstLoop.contains(currentPoint)) {
-            val secondLoop = loopCache.second
-            if(secondLoop.contains(currentPoint) ) {
-                if(firstLoop == secondLoop)
-                    return true
+
+fun isLoop(
+    currentPoint: Pair<Int, Int>,
+    positions: List<Pair<Int, Int>>,
+    loopCache: Pair<MutableList<Pair<Int, Int>>, MutableList<Pair<Int, Int>>>
+): Boolean {
+
+    val firstLoop = loopCache.first
+    val secondLoop = loopCache.second
+
+        if (firstLoop.contains(currentPoint)) {
+            if (secondLoop.contains(currentPoint)) {
+                if (firstLoop.size == secondLoop.size)
+                    if (secondLoop.containsAll(firstLoop))
+                        return true
             } else {
                 secondLoop.add(currentPoint)
             }
         } else {
             firstLoop.add(currentPoint)
         }
-    }
+
     return false
 }
 
 
-fun isInLoopPath(grid: List<List<Char>>,
-            row: Int, column: Int,
-            positions: List<Pair<Int,Int>>,
-            dir: Pair<Int,Int>,loopCache: Pair<MutableList<Pair<Int,Int>>,
-            MutableList<Pair<Int,Int>>>): Boolean {
+fun isInLoopPath(
+    grid: List<List<Char>>,
+    row: Int, column: Int,
+    positions: List<Pair<Int, Int>>,
+    dir: Pair<Int, Int>, loopCache: Pair<MutableList<Pair<Int, Int>>,
+            MutableList<Pair<Int, Int>>>
+): Boolean {
     if (row !in 0..<grid.size || column !in 0..<grid[0].size)
         return false
 
-    val currentPoint = Pair(row,column)
-    if(isLoop(currentPoint,positions,loopCache)) {
-        return true
+    val currentPoint = Pair(row, column)
+    if(positions.contains(currentPoint)) {
+        if (isLoop(currentPoint, positions, loopCache)) {
+            println(grid)
+            return true
+        }
     }
 
-    if(obstacle == grid[row][column]) {
+    if (obstacle == grid[row][column]) {
         val nextDir = nextDirs.get(dir)!!
         val nextPosition = (row + nextDir.row - dir.row) to (column + nextDir.column - dir.column)
         return isInLoopPath(
@@ -199,5 +254,7 @@ fun isInLoopPath(grid: List<List<Char>>,
     }
 
     val nextPosition = (row + dir.row) to (column + dir.column)
-    return isInLoopPath(grid, nextPosition.row, nextPosition.column, positions + nextPosition, dir,loopCache)
+    return isInLoopPath(grid, nextPosition.row, nextPosition.column, positions + nextPosition, dir, loopCache)
 }
+
+fun getEmptyLoopCache() = (mutableListOf<Pair<Int, Int>>() to mutableListOf<Pair<Int, Int>>())
