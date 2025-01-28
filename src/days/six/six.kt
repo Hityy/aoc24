@@ -15,7 +15,21 @@ val nextDirs = mapOf(
     down to left,
     left to up
 )
+val dirsToChar = mapOf(
+    up to '^',
+    down to 'v',
+    left to '<',
+    right to '>',
+)
 
+val charToNumber = mapOf(
+    '^' to 1,
+    '>' to 1,
+    '<' to 1,
+    'v' to 1,
+    '.' to 0,
+    '#' to 0,
+)
 // 4382 too high
 // 4374 good !
 
@@ -86,14 +100,14 @@ val <T,A>Pair<T,A>.column: A
 
 fun solveSixDaySecondStar() {
     val grid =
-        File("src/days/six/test.txt")
+        File("src/days/six/test21.txt")
             .readLines()
             .map { it.split("").filter { it != "" }.map { it.first()} }
 
     val guardInitialPosition = findGuardPosition(grid)
     if(guardInitialPosition != null) {
         val visited = Array(grid.size) { CharArray(grid[0].size) { '.' } }
-
+        val chars = Array(grid.size) { Array(grid[0].size) { mutableListOf<Char>() } }
         visited[guardInitialPosition.row][guardInitialPosition.column] = start
 
 //         dfsRecursive(
@@ -110,12 +124,13 @@ fun solveSixDaySecondStar() {
             guardInitialPosition.row,
             guardInitialPosition.column,
             visited,
-            up
+            up,
+            chars
         )
 //        println("Result: ${visited.toString()}")
         visited.forEach { println(it.map { it.toString() }) }
 //        val distinct = visited.map { it.filter { it == 'X'}.size }.sum()
-        val distinct = visited.sumOf { it -> it.filter { it == 'X' }.size }
+        val distinct = visited.sumOf { it.toList().mapNotNull { charToNumber[it] }.sum() }
         println(distinct)
     }
 
@@ -159,16 +174,20 @@ fun dfsRecursive(grid: List<List<Char>>, row: Int, column: Int,lastRow: Int, las
 
 }
 
-fun dfsIterative(grid: List<List<Char>>, initalrow: Int, initalcolumn: Int, visited: Array<CharArray>, dir: Pair<Int,Int>): Array<CharArray> {
+fun dfsIterative(grid: List<List<Char>>, initalrow: Int, initalcolumn: Int, visited: Array<CharArray>, dir: Pair<Int,Int>, visitedPaths: Array<Array<MutableList<Char>>>): Array<CharArray> {
     val stack = ArrayDeque<Pair<Int,Int>>().also { it.add(initalrow to initalcolumn) }
     var nextDir = dir
     var lastPosition = initalrow to initalcolumn
 
     while(stack.isNotEmpty()) {
         val (row,column) = stack.removeLast()
+        println(row to column)
 
         if (row !in grid.indices || column !in grid[0].indices)
             continue
+
+//        if()
+
 
         if(obstacle == grid[row][column]) {
             visited[row][column] = '#'
@@ -176,13 +195,14 @@ fun dfsIterative(grid: List<List<Char>>, initalrow: Int, initalcolumn: Int, visi
             val nextPosition = (lastPosition.row + nextDir.row) to (lastPosition.column + nextDir.column)
             stack.add(nextPosition)
         } else {
-            visited[row][column] = 'X'
+            visited[row][column] = dirsToChar[nextDir]!!
+            visitedPaths[row][column].add(dirsToChar[nextDir]!!)
             lastPosition = row to column
             val nextPosition = (row + nextDir.row) to (column + nextDir.column)
             stack.add(nextPosition)
         }
-
     }
 
     return visited
 }
+
