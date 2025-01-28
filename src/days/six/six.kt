@@ -120,11 +120,7 @@ fun solveSixDaySecondStar() {
             .map { it.split("").filter { it != "" }.map { it.first() } }
 
     val guardPoint = findGuardPosition(grid)!!
-    val visited = Array(grid.size) { CharArray(grid[0].size) { '.' } }
-
-//        visited[guardInitialPosition.row][guardInitialPosition.column] = start
-
-    dfsIterative(grid, guardPoint, visited, up)
+    val visited = dfsIterative(grid, guardPoint, up)
 
 //        visited.forEach { println(it.map { it.toString() }) }
 //        val distinct = visited.sumOf { it.toList().mapNotNull { charToNumber[it] }.sum() }
@@ -188,9 +184,10 @@ fun straightOrRight(grid: CharGrid, point: Point, dir: Direction): Pair<Point, D
 fun dfsIterative(
     grid: CharGrid,
     startingPoint: Point,
-    visited: Array<CharArray>,
     dir: Direction,
 ): Array<CharArray> {
+    val visited = Array(grid.size) { CharArray(grid[0].size) { '.' } }
+//            visited[guardInitialPosition.row][guardInitialPosition.column] = start
     val stack = ArrayDeque<Point>().also { it.add(startingPoint) }
     var currentDir = dir
 
