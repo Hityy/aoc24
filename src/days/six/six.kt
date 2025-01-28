@@ -3,6 +3,9 @@ package days.six
 import days.ten.start
 import java.io.File
 
+typealias Point = Pair<Int,Int>
+typealias Direction = Pair<Int,Int>
+
 val guard = '^'
 val obstacle = '#'
 
@@ -11,12 +14,14 @@ val up = -1 to 0
 val right = 0 to 1
 val down = 1 to 0
 val left = 0 to -1
+
 val nextDirs = mapOf(
     up to right,
     right to down,
     down to left,
     left to up
 )
+
 val dirsToChar = mapOf(
     up to '^',
     down to 'v',
@@ -32,12 +37,20 @@ val charToNumber = mapOf(
     '.' to 0,
     '#' to 0,
 )
+
+val <T, A> Pair<T, A>.row: T
+    get() = this.first
+
+val <T, A>Pair<T, A>.column: A
+    get() = this.second
+
+
 // 4382 too high
 // 4374 good !
 
 fun solveSixDayFirstStar() {
     val result =
-        File("src/days/six/test.txt")
+        File("src/days/six/test26.txt")
             .readLines()
             .map { it.split("").filter { it != "" }.map { it.first() } }
             .let { countPositions(it) }
@@ -47,13 +60,13 @@ fun solveSixDayFirstStar() {
 
 
 fun countPositions(grid: List<List<Char>>): Int {
-    val guardInitialPosition = findGuardPosition(grid)
-    if (guardInitialPosition != null) {
+    val guardPoint = findGuardPosition(grid)
+    if (guardPoint != null) {
         val positions = traverseInGridByDir(
             grid,
-            guardInitialPosition.row,
-            guardInitialPosition.column,
-            listOf(guardInitialPosition),
+            guardPoint.row,
+            guardPoint.column,
+            listOf(guardPoint),
             up
         )
         return positions.distinct().size
@@ -65,15 +78,16 @@ fun traverseInGridByDir(
     grid: List<List<Char>>,
     row: Int,
     column: Int,
-    positions: List<Pair<Int, Int>>,
-    dir: Pair<Int, Int>
-): List<Pair<Int, Int>> {
+    positions: List<Point>,
+    dir: Direction
+): List<Point> {
     if (row !in grid.indices || column !in grid[0].indices)
         return positions.dropLast(1)
 
     if (obstacle == grid[row][column]) {
         val nextDir = nextDirs.get(dir)!!
         val nextPosition = (row + nextDir.row - dir.row) to (column + nextDir.column - dir.column)
+
         return traverseInGridByDir(
             grid,
             nextPosition.row,
@@ -87,7 +101,7 @@ fun traverseInGridByDir(
     return traverseInGridByDir(grid, nextPosition.row, nextPosition.column, positions + nextPosition, dir)
 }
 
-fun findGuardPosition(grid: List<List<Char>>): Pair<Int, Int>? {
+fun findGuardPosition(grid: List<List<Char>>): Point? {
     for (row in grid.indices) {
         for (column in grid[0].indices) {
             if (guard == grid[row][column]) {
@@ -97,12 +111,6 @@ fun findGuardPosition(grid: List<List<Char>>): Pair<Int, Int>? {
     }
     return null
 }
-
-val <T, A> Pair<T, A>.row: T
-    get() = this.first
-
-val <T, A>Pair<T, A>.column: A
-    get() = this.second
 
 
 fun solveSixDaySecondStar() {
@@ -114,56 +122,151 @@ fun solveSixDaySecondStar() {
     val guardInitialPosition = findGuardPosition(grid)
     if (guardInitialPosition != null) {
         val visited = Array(grid.size) { CharArray(grid[0].size) { '.' } }
-        val chars = Array(grid.size) { Array(grid[0].size) { mutableListOf<Char>() } }
+
         visited[guardInitialPosition.row][guardInitialPosition.column] = start
 
-//         dfsRecursive(
-//            grid,
-//            guardInitialPosition.row,
-//            guardInitialPosition.column,
-//             guardInitialPosition.row,
-//             guardInitialPosition.column,
-//            visited,
-//            up
-//        )
         dfsIterative(
             grid,
-            guardInitialPosition.row,
-            guardInitialPosition.column,
+            guardInitialPosition,
             visited,
             up,
-            chars
         )
-//        println("Result: ${visited.toString()}")
-        visited.forEach { println(it.map { it.toString() }) }
-//        val distinct = visited.map { it.filter { it == 'X'}.size }.sum()
-        val distinct = visited.sumOf { it.toList().mapNotNull { charToNumber[it] }.sum() }
-        println(distinct)
 
-//        val grid1 =
-//            File("src/days/six/test21.txt")
-//                .readLines()
-//                .map { it.split("").filter { it != "" }.map { it.first()} }
-//
-//        val testObstacle1 = willBeLoop(grid1,6,4,6,3,6,5, left,visited)
-//        println(testObstacle1)
+//        visited.forEach { println(it.map { it.toString() }) }
+//        val distinct = visited.sumOf { it.toList().mapNotNull { charToNumber[it] }.sum() }
+//        println(distinct)
 
-//        val grid1 =
-//            File("src/days/six/test22.txt")
-//                .readLines()
-//                .map { it.split("").filter { it != "" }.map { it.first()} }
-//
-//        val testObstacle1 = willBeLoop(grid1,6,7,7,7,5,7, left,visited)
-//        println(testObstacle1)
+        val pathPoints = visited.flatMapIndexed { rowIndex, row ->
+            row.toList().mapIndexedNotNull { colIndex, v ->
+                if (v != '.') rowIndex to colIndex
+                else null
+            }
+        }
+
+        val loops = pathPoints.filter { obstacle -> willBeLoop(grid,guardInitialPosition,obstacle, up) }
+        println(loops.size)
+
+
     }
-
 
 }
 
 
 // -- **
+// 1853 too high
+// 1836 too high
 // 1832 too high
+
 // 1690 too low
+
+fun pointInGrid(grid: List<List<Char>>, point: Point): Boolean {
+    return point.row in grid.indices && point.column in grid[0].indices
+}
+
+fun straightOrRight(
+    grid: List<List<Char>>,
+    point: Point,
+    dir: Direction
+): Pair<Point, Direction>? {
+    var currentDir = dir
+
+    for (r in 0 until 4) {
+        val testPoint = (point.row + currentDir.row) to (point.column + currentDir.column)
+        if (pointInGrid(grid, testPoint)) {
+            if (grid[testPoint.row][testPoint.column] != obstacle) {
+                return testPoint to currentDir
+            }
+        } else {
+            return null
+        }
+        currentDir = nextDirs[currentDir]!!
+    }
+    return null
+}
+
+fun dfsIterative(
+    grid: List<List<Char>>,
+    startingPoint: Point,
+    visited: Array<CharArray>,
+    dir: Direction,
+): Array<CharArray> {
+    val stack = ArrayDeque<Point>().also { it.add(startingPoint.row to startingPoint.column) }
+    var currentDir = dir
+
+    while (stack.isNotEmpty()) {
+        val (row, column) = stack.removeLast()
+
+        if (row !in grid.indices || column !in grid[0].indices)
+            continue
+
+        visited[row][column] = dirsToChar[currentDir]!!
+
+        val turn = straightOrRight(grid, row to column, currentDir)
+        if (turn != null) {
+            val (nextPoint, nextDir) = turn
+            currentDir = nextDir
+            stack.add(nextPoint)
+        }
+    }
+
+    return visited
+}
+
+fun willBeLoop(
+    legacyGrid: List<List<Char>>,
+    startingPoint: Point,
+    obstaclePoint: Point,
+    dir: Direction,
+    ): Boolean {
+
+    if (obstaclePoint.row !in legacyGrid.indices || obstaclePoint.row !in legacyGrid[0].indices)
+        return false
+
+    if (legacyGrid[obstaclePoint.row][obstaclePoint.column] != '.') {
+        return false
+    }
+
+//    val visitedPaths = Array(legacyGrid.size) { Array(legacyGrid[0].size) { mutableListOf<Char>() } }
+    val visited = mutableSetOf<Pair<Point, Direction>>()
+    val stack = ArrayDeque<Pair<Int, Int>>().also { it.add(startingPoint.row to startingPoint.column) }
+    val grid = legacyGrid.map { it.toMutableList() }
+    var currentDir = dir
+
+    grid[obstaclePoint.row][obstaclePoint.column] = '#'
+
+    while (stack.isNotEmpty()) {
+        val (row, column) = stack.removeLast()
+        if (row !in grid.indices || column !in grid[0].indices) {
+            continue
+        }
+
+//        if (visitedPaths[row][column].contains(dirsToChar[currentDir])) {
+//            return true
+//        }
+        if(((row to column) to currentDir) in visited) {
+            return true
+        }
+
+        val turn = straightOrRight(grid, row to column, currentDir)
+        if (turn != null) {
+            val (nextPoint, nextDir) = turn
+            currentDir = nextDir
+//            visitedPaths[row][column].add(dirsToChar[currentDir]!!)
+            visited.add((row to column) to nextDir)
+
+            stack.add(nextPoint)
+
+//            if(currentDir == dir && nextDir == startingPoint) {
+//                return true
+//            }
+        }
+
+    }
+
+    return false
+}
+
+
 fun dfsRecursive(
     grid: List<List<Char>>,
     row: Int,
@@ -171,9 +274,8 @@ fun dfsRecursive(
     lastRow: Int,
     lastColumn: Int,
     visited: Array<CharArray>,
-    dir: Pair<Int, Int>
+    dir: Direction
 ): Array<CharArray> {
-    println("$row $column")
     if (row !in grid.indices || column !in grid[0].indices || visited[row][column] == 'X')
         return visited
 
@@ -198,167 +300,3 @@ fun dfsRecursive(
     return dfsRecursive(grid, nextPosition.row, nextPosition.column, row, column, visited, dir)
 
 }
-
-fun dfsIterative(
-    grid: List<List<Char>>,
-    initalrow: Int,
-    initalcolumn: Int,
-    visited: Array<CharArray>,
-    dir: Pair<Int, Int>,
-    visitedPaths: Array<Array<MutableList<Char>>>
-): Array<CharArray> {
-    val stack = ArrayDeque<Pair<Int, Int>>().also { it.add(initalrow to initalcolumn) }
-    var nextDir = dir
-    var beforeLast = 0 to 0
-    var lastPosition = initalrow to initalcolumn
-    var counter = 0
-    while (stack.isNotEmpty()) {
-        val (row, column) = stack.removeLast()
-        println(row to column)
-
-        if (row !in grid.indices || column !in grid[0].indices)
-            continue
-
-
-//        if(visitedPaths[row][column].contains(dirsToChar[nextDir])) {
-//            println("LOOP")
-//            break
-//        }
-
-        if (obstacle == grid[row][column]) {
-            visited[row][column] = '#'
-            nextDir = nextDirs.get(nextDir)!!
-            val nextPosition = (lastPosition.row + nextDir.row) to (lastPosition.column + nextDir.column)
-            stack.add(nextPosition)
-            beforeLast = lastPosition
-            lastPosition = nextPosition
-
-            if (visitedPaths[row][column].contains(dirsToChar[nextDir])) {
-                if (willBeLoop(
-                        grid,
-                        lastPosition.row,
-                        lastPosition.column,
-                        nextPosition.row,
-                        nextPosition.column,
-                        beforeLast.row,
-                        beforeLast.column,
-                        nextDir,
-                        visited
-                    )
-                ) {
-                    counter++
-                }
-
-            }
-        } else {
-            visited[row][column] = dirsToChar[nextDir]!!
-//            visitedPaths[row][column].add(dirsToChar[nextDir]!!)
-            visitedPaths[row][column].add(dirsToChar[nextDir]!!)
-            beforeLast = lastPosition
-            lastPosition = row to column
-            val nextPosition = (row + nextDir.row) to (column + nextDir.column)
-            stack.add(nextPosition)
-
-            if (visitedPaths[row][column].contains(dirsToChar[nextDir])) {
-                if (willBeLoop(
-                        grid,
-                        lastPosition.row,
-                        lastPosition.column,
-                        nextPosition.row,
-                        nextPosition.column,
-                        beforeLast.row,
-                        beforeLast.column,
-                        nextDir,
-                        visited
-                    )
-                ) {
-                    counter++
-                }
-
-            }
-//            if(visited[row][column] != '.' && visited[row][column] != '^') {
-//            if(willBeLoop(grid,row,column,nextPosition.row,nextPosition.column,nextDir,visited)) {
-//                counter++
-//            }
-//            }
-        }
-    }
-
-    println(counter)
-    return visited
-}
-
-// visitedPaths: Array<Array<MutableList<Char>>>
-fun willBeLoop(
-    _grid: List<List<Char>>,
-    currentRow: Int,
-    currentColumn: Int,
-    obstacleRow: Int,
-    obstacleColumn: Int,
-    lastRow: Int,
-    lastColumn: Int,
-    dir: Pair<Int, Int>,
-    visited: Array<CharArray>,
-): Boolean {
-    if (obstacleRow !in _grid.indices || obstacleColumn !in _grid[0].indices)
-        return false
-
-//    if(_grid[obstacleRow][obstacleColumn] != '.') {
-//        return false
-//    }
-
-//    val chars = Array(grid.size) { Array(grid[0].size) { mutableListOf<Char>() } }
-//    val visitedPaths = visited.map{ row -> row.map { mutableListOf(it) }.toTypedArray() }.toTypedArray()
-    val visitedPaths = Array(_grid.size) { Array(_grid[0].size) { mutableListOf<Char>() } }
-    val stack = ArrayDeque<Pair<Int, Int>>().also { it.add(currentRow to currentColumn) }
-    var nextDir = dir
-    var lastPosition = lastRow to lastColumn
-    val grid = _grid.map { it.toMutableList() }
-//    println(grid)
-    grid[obstacleRow][obstacleColumn] = '#'
-
-    while (stack.isNotEmpty()) {
-        val (row, column) = stack.removeLast()
-        println(row to column)
-        if (row !in grid.indices || column !in grid[0].indices)
-            continue
-
-        if (visitedPaths[row][column].contains(dirsToChar[nextDir])) {
-            println("LOOP $row $column")
-//            visitedPaths.forEach { println(it.joinToString(",")) }
-            return true
-        }
-
-
-        if (obstacle == grid[row][column]) {
-//            visited[row][column] = '#'
-            if(visitedPaths[lastPosition.row][lastPosition.column].size > 0) {
-                visitedPaths[lastPosition.row][lastPosition.column].removeLast()
-            }
-
-            visitedPaths[lastPosition.row][lastPosition.column].add(dirsToChar[nextDir]!!)
-//            nextDir = nextDirs.get(nextDir)!!ter
-//            val nextPosition = (lastPosition.row + nextDir.row) to (lastPosition.column + nextDir.column)
-//            stack.add(nextPosition)
-//                visited[row][column] = '#'
-
-            nextDir = nextDirs.get(nextDir)!!
-            val nextPosition = (lastPosition.row + nextDir.row) to (lastPosition.column + nextDir.column)
-            stack.add(nextPosition)
-            lastPosition = nextPosition
-        } else {
-//            visited[row][column] = dirsToChar[nextDir]!!
-//            visitedPaths[row][column].add(dirsToChar[nextDir]!!)
-            visitedPaths[row][column].add(dirsToChar[nextDir]!!)
-            lastPosition = row to column
-            val nextPosition = (row + nextDir.row) to (column + nextDir.column)
-            stack.add(nextPosition)
-        }
-
-
-    }
-
-//    visitedPaths.forEach { println(it.joinToString(",")) }
-    return false
-}
-
