@@ -1,4 +1,5 @@
 package days.six
+import days.ten.start
 import java.io.File
 
 val guard = '^'
@@ -45,7 +46,7 @@ fun countPositions(grid: List<List<Char>>): Int {
 }
 
 fun traverseInGridByDir(grid: List<List<Char>>, row: Int, column: Int, positions: List<Pair<Int,Int>>, dir: Pair<Int,Int>): List<Pair<Int,Int>> {
-    if (row !in 0..<grid.size || column !in 0..<grid[0].size)
+    if (row !in grid.indices || column !in grid[0].indices)
         return positions.dropLast(1)
 
     if(obstacle == grid[row][column]) {
@@ -80,3 +81,108 @@ val <T, A> Pair<T, A>.row: T
 
 val <T,A>Pair<T,A>.column: A
     get() = this.second
+
+
+
+fun solveSixDaySecondStar() {
+    val grid =
+        File("src/days/six/test.txt")
+            .readLines()
+            .map { it.split("").filter { it != "" }.map { it.first()} }
+
+    val guardInitialPosition = findGuardPosition(grid)
+    if(guardInitialPosition != null) {
+        val visited = Array(grid.size) { CharArray(grid[0].size) { '.' } }
+
+        visited[guardInitialPosition.row][guardInitialPosition.column] = start
+
+//         dfsRecursive(
+//            grid,
+//            guardInitialPosition.row,
+//            guardInitialPosition.column,
+//             guardInitialPosition.row,
+//             guardInitialPosition.column,
+//            visited,
+//            up
+//        )
+        dfsIterative(
+            grid,
+            guardInitialPosition.row,
+            guardInitialPosition.column,
+            visited,
+            up
+        )
+//        println("Result: ${visited.toString()}")
+        visited.forEach { println(it.map { it.toString() }) }
+//        val distinct = visited.map { it.filter { it == 'X'}.size }.sum()
+        val distinct = visited.sumOf { it -> it.filter { it == 'X' }.size }
+        println(distinct)
+    }
+
+
+
+}
+
+// fun getNextPosition(grid: List<List<Char>>, row: Int, column: Int,dir: Pair<Int,Int) {
+//     if(obstacle == grid[row][column]) {
+
+//     }
+
+// }
+
+// -- **
+
+fun dfsRecursive(grid: List<List<Char>>, row: Int, column: Int,lastRow: Int, lastColumn: Int, visited: Array<CharArray>, dir: Pair<Int,Int>): Array<CharArray> {
+    println("$row $column")
+    if (row !in grid.indices || column !in grid[0].indices || visited[row][column] == 'X')
+        return visited
+
+    visited[row][column] = 'X'
+
+    if(obstacle == grid[row][column]) {
+        visited[row][column] = '#'
+        val nextDir = nextDirs.get(dir)!!
+        val nextPosition = (lastRow + nextDir.row) to (lastColumn + nextDir.column)
+        return dfsRecursive(
+            grid,
+            nextPosition.row,
+            nextPosition.column,
+            row,
+            column,
+            visited,
+            nextDir
+        )
+    }
+
+    val nextPosition = (row + dir.row) to (column + dir.column)
+    return dfsRecursive(grid, nextPosition.row, nextPosition.column, row, column, visited, dir)
+
+}
+
+fun dfsIterative(grid: List<List<Char>>, initalrow: Int, initalcolumn: Int, visited: Array<CharArray>, dir: Pair<Int,Int>): Array<CharArray> {
+    val stack = ArrayDeque<Pair<Int,Int>>().also { it.add(initalrow to initalcolumn) }
+    var nextDir = dir
+    var lastPosition = initalrow to initalcolumn
+
+    while(stack.isNotEmpty()) {
+        val (row,column) = stack.removeLast()
+
+        if (row !in grid.indices || column !in grid[0].indices)
+            continue
+
+        if(obstacle == grid[row][column]) {
+            visited[row][column] = '#'
+            nextDir = nextDirs.get(nextDir)!!
+            val nextPosition = (lastPosition.row + nextDir.row) to (lastPosition.column + nextDir.column)
+            stack.add(nextPosition)
+        } else {
+            visited[row][column] = 'X'
+            lastPosition = row to column
+            val nextPosition = (row + nextDir.row) to (column + nextDir.column)
+            stack.add(nextPosition)
+        }
+
+    }
+
+    return visited
+}
