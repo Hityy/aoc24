@@ -1,6 +1,5 @@
 import java.io.File
 
-
 /*
 const solver1 = test => test
     .matchAll(/mul\(\d+,\d+\)/gm)
@@ -12,90 +11,72 @@ const solver1 = test => test
  */
 
 fun solveFirstStarThirdDay() {
-    val input = File("src/days/three/src1.txt")
-        .readText()
+    val input = File("src/days/three/src1.txt").readText()
 
     val res = """mul\(\d+,\d+\)""".toRegex()
         .findAll(input)
-        .map {
-            """\d+""".toRegex(RegexOption.MULTILINE)
-                .findAll(it.value)
-                .map { a -> a.value }
-                .map { a -> a.toLong() }
-                .toList()
-        }
-        .map { it[0] * it[1]}
-        .sum()
+        .map { atoil(it.value) }
+        .sumOf { it[0] * it[1] }
 
     println(res)
     println("end")
 }
 
-// 34202765 too low
-// 93922240 too low
-
 fun solveSecondStarThirdDay() {
-    val input = File("src/days/three/src1.txt")
-        .readText().trimMargin()
+    val input = File("src/days/three/src1.txt").readText().trimMargin()
 
-    val dontRanges = """don't\(\)""".toRegex().findAll(input).map { it.range.start }.toList().reversed().toMutableList()
-    val doRanges = """do\(\)""".toRegex().findAll(input)
-        .map { it.range.endInclusive }
-        .toList()
-        .reversed()
+    val res = """mul\(\d+,\d+\)""".toRegex()
+        .findAll(skipCorrupted(input))
+        .map { atoil(it.value) }
+        .sumOf { it[0] * it[1] }
 
-    val zipRanges = mutableListOf<Pair<Int,Int>>()
-    for(doEnd in doRanges) {
-        for(dontStart in dontRanges) {
-            if(dontStart <= doEnd) {
+    println(res)
+    println("end")
+}
+
+fun atoil(text: String): List<Int> {
+    val buffer = mutableListOf<Int>()
+    val iterationBuffer = mutableListOf<Char>()
+    for (c in text) {
+        if (c in '0'..'9') {
+            iterationBuffer += c
+        } else if (iterationBuffer.isNotEmpty()) {
+            buffer += iterationBuffer.joinToString("").toInt()
+            iterationBuffer.clear()
+        }
+    }
+    return buffer
+}
+
+fun skipCorrupted(memory: String): String {
+    val dontRanges = """don't\(\)""".toRegex().findAll(memory).map { it.range.first }.toList()
+    val doRanges = """do\(\)""".toRegex().findAll(memory).map { it.range.last }.toList()
+
+    val zipRanges = mutableListOf<Pair<Int, Int>>()
+    for (dontStart in dontRanges) {
+        for (doEnd in doRanges) {
+            if (dontStart < doEnd) {
                 zipRanges += dontStart to doEnd
                 break;
             }
         }
-
-
     }
 
-    var currentInput = input
-    for((dontStart,doEnd) in zipRanges) {
-//        println("${dontRange.start} until ${doRange.last}")
-//        val test = currentInput.substring(dontStart..doEnd)
-//        println(test)
-//        println(" ${test.length}, ${doEnd-dontStart +1 }, ${ test.length == ".".repeat(doEnd-dontStart +1).length}")
-        currentInput = currentInput.replaceRange(dontStart ..doEnd,".".repeat(doEnd-dontStart +1))
-
+    var currentMemory = memory
+    for ((dontStart, doEnd) in zipRanges) {
+        currentMemory = currentMemory.replaceRange(dontStart..doEnd, ".".repeat(doEnd - dontStart + 1))
     }
+    return currentMemory
+}
 
-    println(currentInput)
 
+fun containsAll(search: String, text: String): List<IntRange> {
+    var lastIndex = text.indexOf(search)
+    val buffer = mutableListOf<IntRange>()
 
-//    val input = """xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"""
-
-//    val replace = """don't\(\)(.+)do\(\)""".toRegex(RegexOption.MULTILINE).findAll(input).map { it.groups }
-//    replace.forEach {
-//        println(it)
-//    }
-//    println(replace)
-//        .replace(input) { "" }
-
-//    println(replace)
-//return
-    val res = """mul\(\d+,\d+\)""".toRegex()
-        .findAll(currentInput)
-        .map {
-            """\d+""".toRegex()
-                .findAll(it.value)
-                .map { a -> a.value }
-                .map { a -> a.toLong() }
-                .toList()
-        }
-//        .map {
-//            println(it)
-//            it
-//        }
-        .map { it[0] * it[1]}
-        .sum()
-
-    println(res)
-    println("end")
+    while (lastIndex != -1) {
+        buffer += lastIndex..<lastIndex + search.length
+        lastIndex = text.indexOf(search, lastIndex + 1)
+    }
+    return buffer.toList()
 }

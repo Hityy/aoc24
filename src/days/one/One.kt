@@ -3,41 +3,34 @@ package days.one
 import java.io.File
 import kotlin.math.abs
 
-fun solveFirstStar() {
-    val lines =
+
+fun solveFirstDaySecondStar() {
+    val (leftList, rightList) =
         File("src/days/one/src1.txt")
             .readLines()
             .map {
                 val (left, right) = it.split("   ")
-                Pair(left.toLong(), right.toLong())
+                left.toInt() to right.toInt()
             }
-            .fold(Pair(mutableListOf<Long>(), mutableListOf<Long>())) { (leftList, rightList),
-                                                                        (leftValue, rightValue) ->
-                leftList.add(leftValue)
-                rightList.add(rightValue)
-                Pair(leftList, rightList)
+            .unzip()
+
+    val res = leftList.sumOf { l -> l * rightList.count { r -> l == r } }
+    println(res)
+}
+
+fun solveFirstStar() {
+    val (leftList, rightList) =
+        File("src/days/one/src1.txt")
+            .readLines()
+            .map {
+                val (left, right) = it.split("   ")
+                left.toInt() to right.toInt()
             }
-            .let { (first, second) -> Pair(first.sorted(), second.sorted()) }
-            .let { (first, second) -> first.zip(second) }
-            .sumOf { (first, second) -> abs(first - second) }
+            .unzip()
+            .let { (first, second) -> first.sorted() to second.sorted() }
 
-    // val lines = File("./src1.txt")
-    // .readLines()
-    // .map {
-    //     val (left, right) = it.split("   ")
-    //     left.toLong() to right.toLong()
-    // }
-    // .unzip()  // Rozdziela na dwie listy
-    // .let { (leftList, rightList) ->
-    //     leftList.sorted() to rightList.sorted()  // Sortowanie list w jednym kroku
-    // }
-    // .let { (sortedLeft, sortedRight) ->
-    //     sortedLeft.zip(sortedRight)  // Zipowanie dwóch list
-    // }
-    // .map { (first, second) -> abs(first - second) }  // Liczenie różnicy
-    // .sum()  // Sumowanie wyników
-
-    // println(lines)
+    val res = leftList.mapIndexed { index, l -> abs(l - rightList[index]) }.sum()
+    println(res)
 
     // val lines = File("./src1.txt")
     // .readLines()
@@ -50,5 +43,4 @@ fun solveFirstStar() {
     // .map { (first, second) -> abs(first - second) }  // Liczenie różnicy
     // .sum()  // Sumowanie wyników
 
-    println(lines)
 }
