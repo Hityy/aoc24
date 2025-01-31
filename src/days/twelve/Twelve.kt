@@ -1,5 +1,6 @@
 import days.six.column
 import days.six.row
+import java.io.File
 
 //private typealias Point = Pair<Int,Int>
 private typealias Grid = List<List<Char>>
@@ -8,6 +9,14 @@ private typealias Direction = Pair<Int, Int>
 fun solveTwelveDayFirstStar() {
 
     tests()
+
+    val grid = getGrid("src/days/twelve/src1.txt")
+    val res = findRegions(grid)
+        .map { it.first() to it.size }
+        .map { (point,area) -> area*calculatePerimeter(grid,point)}
+        .sum()
+
+    println(res)
 }
 
 fun tests() {
@@ -23,6 +32,8 @@ fun tests() {
 //    val gridA = listOf('A', 'A', 'A', 'A')
 //    val pointsA = gridA.mapIndexed { index, _ -> 0 to index }
 //    println(pointsA)
+    /// PERIMETERS
+    println("PERIMETERS")
 
     grid1.forEach { println(it) }
 
@@ -41,7 +52,28 @@ fun tests() {
     val testPerimeterE = calculatePerimeter(grid1,Point(3,0,'E'))
     println("testPerimeterE perimeter = 8 ${testPerimeterE == 8}")
 
+    val grid2 = getGrid("src/days/twelve/test1.txt")
+    grid2.forEach{ println(it) }
 
+    val testPerimeterO = calculatePerimeter(grid2,Point(0,0,'O'))
+    println(testPerimeterO)
+    println("testPerimeterO perimeter = 36 ${testPerimeterO == 36}")
+
+    /// REGIONS
+    println("REGIONS")
+    val visitedC = Array(grid1.size) { BooleanArray(grid1[0].size) { false } }
+    val regionsC = findPointsInRegion(grid1,Point(1,2,'C'),visitedC)
+    println(regionsC)
+
+    val allRegions = findRegions(grid1)
+    allRegions.forEach { println(it) }
+    println(allRegions.size)
+
+}
+
+
+fun getGrid(path: String): List<List<Char>> {
+    return File(path).readLines().map { it.toCharArray().toList() }
 }
 
 val up = -1 to 0
@@ -51,16 +83,16 @@ val left = 0 to -1
 val directions = listOf<Direction>(up, right, down, left)
 
 data class Point(val row: Int, val column: Int, var type: Char) {
-    constructor(point: Point, type: Char): this(point.row,point.column,type)
+//    constructor(point: Point, type: Char): this(point.row,point.column,type)
 }
 
 private operator fun Point.plus(dir: Direction): Point {
     return Point(this.row + dir.row, this.column + dir.column, this.type)
 }
 
-
 fun <T> include(grid: List<List<T>>, point: Point): Boolean =
-    point.row in grid.indices && point.column in grid[0].indices
+    point.row in grid.indices && point.column in grid[0].indices && grid[point.row][point.column] == point.type
+
 fun include(grid: Array<BooleanArray>, point: Point): Boolean = grid[point.row][point.column] ?: false
 
 private operator fun <T> List<List<T>>.contains(point: Point) = include(this, point)
@@ -77,6 +109,9 @@ fun calculatePerimeter(grid: Grid, point: Point): Int {
     val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
     var perimeter = 0
 
+    if(point !in grid) {
+        return 0
+    }
     while (stack.isNotEmpty()) {
         val currentPoint = stack.removeLast()
 //        println(currentPoint)
@@ -143,19 +178,145 @@ fun calculatePerimeter(grid: Grid, point: Point): Int {
             perimeter++
         }
 
-
-
-
-//          if(pointRight !in grid || pointUp.type != type) {
-//            perimeter++
-//        }
-//          if(pointDown !in grid || pointUp.type != type) {
-//            perimeter++
-//        }
-//          if(pointLeft !in grid || pointUp.type != type) {
-//            perimeter++
-//        }
-//
     }
     return perimeter
+}
+
+fun findRegions(grid: Grid): List<List<Point>> {
+    val regions = mutableListOf<List<Point>>()
+    val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
+
+    // idziemy przez wszystkie nody
+    // dfs zeby zaznaczyc odwiedzone -> zwracamy liste odwiedzonych puntkow
+    // dodajemy nowa liste do bufera
+
+    for(row in grid.indices) {
+        for(column in grid[0].indices) {
+            if(!visited[row][column]) {
+                val type = grid[row][column]
+                regions += findPointsInRegion(grid,Point(row,column,type),visited)
+            }
+        }
+    }
+
+    return regions
+}
+
+fun findPointsInRegion(grid: Grid, point:Point, visited: Array<BooleanArray>): List<Point> {
+
+    val stack = ArrayDeque<Point>().also { it.add(point) }
+    val points = mutableListOf<Point>()
+
+    while(stack.isNotEmpty()) {
+        val currentPoint = stack.removeLast()
+
+        if(currentPoint !in grid) {
+            continue
+        }
+
+        if(currentPoint in visited) {
+            continue
+        }
+
+        visited[currentPoint.row][currentPoint.column] = true
+        points.add(currentPoint)
+
+        for(dir in directions) {
+            stack.add(currentPoint + dir)
+        }
+
+    }
+    return points
+}
+
+// **
+fun calculateSides(grid: Grid, point: Point): Int {
+    val stack = ArrayDeque<Point>().also { it.add(point) }
+    val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
+    var sides = 0
+    val bufferSides = mutableListOf<Pair<Char,Point>>()
+
+    if(point !in grid) {
+        return 0
+    }
+    while (stack.isNotEmpty()) {
+        val currentPoint = stack.removeLast()
+//        println(currentPoint)
+        val (row,column,type) = currentPoint
+
+//        println(currentPoint in visited)
+        if(currentPoint in visited) {
+            continue
+        }
+
+        visited[row][column] = true
+
+        // check if neighbours are in grid
+        val pointUp = currentPoint + up
+        val pointRight = currentPoint + right
+        val pointDown = currentPoint + down
+        val pointLeft = currentPoint + left
+
+
+//        println(pointUp !in grid)
+//        println(pointUp.type != type)
+
+        if(pointUp in grid) {
+            pointUp.type = grid[pointUp.row][pointUp.column]
+            if(pointUp.type != type) {
+                sides++
+//                bufferSides.add(up to pointUp)
+                bufferSides.add('u' to pointUp)
+            } else if(pointUp !in visited) {
+                stack.add(pointUp)
+            }
+        } else {
+            sides++
+            bufferSides.add('u' to pointUp)
+        }
+
+        if(pointRight in grid) {
+            pointRight.type = grid[pointRight.row][pointRight.column]
+            if(pointRight.type != type) {
+                sides++
+                bufferSides.add('r' to pointRight)
+            } else if(pointRight !in visited) {
+                stack.add(pointRight)
+            }
+        } else {
+            sides++
+            bufferSides.add('r' to pointRight)
+        }
+
+        if(pointDown in grid) {
+            pointDown.type = grid[pointDown.row][pointDown.column]
+            if(pointDown.type != type) {
+                sides++
+                bufferSides.add('d' to pointDown)
+            } else if(pointDown !in visited) {
+                stack.add(pointDown)
+            }
+        } else {
+            sides++
+            bufferSides.add('d' to pointDown)
+        }
+
+        if(pointLeft in grid) {
+            pointLeft.type = grid[pointLeft.row][pointLeft.column]
+            if(pointLeft.type != type) {
+                sides++
+                bufferSides.add('l' to pointLeft)
+            } else if(pointLeft !in visited) {
+                stack.add(pointLeft)
+            }
+        } else {
+            sides++
+            bufferSides.add('l' to pointLeft)
+        }
+
+    }
+
+    val test = bufferSides.groupBy({it.second.row},{it.second.column})
+    println(test)
+    return sides
 }
