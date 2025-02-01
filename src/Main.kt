@@ -3,6 +3,7 @@
 
 fun main() {
 //    solveTwelveDayFirstStar()
-    solveTwelveDaySecondStar()
+//    solveTwelveDaySecondStar()
+    solveThirteenfirstDay()
 }
 
