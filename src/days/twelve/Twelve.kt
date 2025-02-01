@@ -292,7 +292,7 @@ fun findRegions(grid: Grid): List<List<Point>> {
 
 fun findPointsInRegion(grid: Grid, point:Point, visited: Array<BooleanArray>): List<Point> {
 
-    val stack = ArrayDeque<Point>().also { it.add(point) }
+    val stack = ArrayDeque<Point>().also { it + point }
     val points = mutableListOf<Point>()
 
     while(stack.isNotEmpty()) {
@@ -310,7 +310,7 @@ fun findPointsInRegion(grid: Grid, point:Point, visited: Array<BooleanArray>): L
         points.add(currentPoint)
 
         for(dir in directions) {
-            stack.add(currentPoint + dir)
+            stack += currentPoint + dir
         }
 
     }
