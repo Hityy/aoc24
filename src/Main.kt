@@ -2,6 +2,7 @@
 
 
 fun main() {
-    solveTwelveDayFirstStar()
+//    solveTwelveDayFirstStar()
+    solveTwelveDaySecondStar()
 }
 

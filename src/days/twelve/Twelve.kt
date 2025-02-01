@@ -1,6 +1,7 @@
 import days.six.column
 import days.six.row
 import java.io.File
+import kotlin.math.abs
 
 //private typealias Point = Pair<Int,Int>
 private typealias Grid = List<List<Char>>
@@ -14,6 +15,17 @@ fun solveTwelveDayFirstStar() {
     val res = findRegions(grid)
         .map { it.first() to it.size }
         .map { (point,area) -> area*calculatePerimeter(grid,point)}
+        .sum()
+
+    println(res)
+}
+
+fun solveTwelveDaySecondStar() {
+
+    val grid = getGrid("src/days/twelve/src1.txt")
+    val res = findRegions(grid)
+        .map { it.first() to it.size }
+        .map { (point, area) -> area * calculateAllSides(grid,point) }
         .sum()
 
     println(res)
@@ -69,8 +81,84 @@ fun tests() {
     allRegions.forEach { println(it) }
     println(allRegions.size)
 
+    // SIDES
+    println("SIDES")
+
+//    calculateSides(grid1,Point(0,0,'A'))
+
+    val grid3 = getGrid("src/days/twelve/test3.txt")
+    val (horizontal,vertical) = calculateSides(grid3,Point(0,0,'E'))
+//    println(points)
+
+    println("STETSA")
+//    val levelMinut1 = points.filter { it.row == -1 }
+//    val level0 = points.filter { it.row == 0 }
+    val level1 = horizontal//.filter { it.first.row == 1 }
+        .groupBy { it.second }
+        .mapValues { (_,list) -> mergeToSideHorizontal(list.sortedBy { it.first.column }) }
+
+    val level2 = vertical//.filter { it.first.row == 1 }
+        .groupBy { it.second }
+        .mapValues { (_,list) -> mergeToSideVertical(list.sortedBy { it.first.row }) }
+
+//        .values
+//    val level2 = points.filter { it.row == 2 }
+//    val level3 = points.filter { it.row == 4 }
+
+//    println(levelMinut1)
+//    println(level0)
+    println(level1)
+    println(level2)
+
+    val res = level1.values.sum() + level2.values.sum()
+    println(res)
+//    println(level2)
+//    println(level3)
+
+//    val test = mergeToSideVertical(listOf(1,4,5,6,8,10,11,12,13).map { Point(it,0,'d') to "as"})
+//    println(test)
+
 }
 
+fun calculateAllSides(grid: Grid, point: Point): Int {
+    val (horizontal,vertical) = calculateSides(grid,point)
+
+    val level1 = horizontal
+        .groupBy { it.second }
+        .mapValues { (_,list) -> mergeToSideHorizontal(list.sortedBy { it.first.column }) }
+
+    val level2 = vertical
+        .groupBy { it.second }
+        .mapValues { (_,list) -> mergeToSideVertical(list.sortedBy { it.first.row }) }
+
+    return level1.values.sum() + level2.values.sum()
+}
+
+fun mergeToSideHorizontal(list: List<Pair<Point,String>>): Int {
+    var counter = 0
+    for(index in 0 until list.size - 1 ) {
+            val (p1,_) = list[index]
+            val (p2,_) = list[index+1]
+//            println("$p1 $p2")
+            if(abs(p2.column-p1.column) > 1) {
+                counter++
+            }
+    }
+    return counter + 1
+}
+
+fun mergeToSideVertical(list: List<Pair<Point,String>>): Int {
+    var counter = 0
+    for(index in 0 until list.size - 1 ) {
+        val (p1,_) = list[index]
+        val (p2,_) = list[index+1]
+//        println("$p1 $p2")
+        if(abs(p2.row-p1.row) > 1) {
+            counter++
+        }
+    }
+    return counter + 1
+}
 
 fun getGrid(path: String): List<List<Char>> {
     return File(path).readLines().map { it.toCharArray().toList() }
@@ -230,15 +318,24 @@ fun findPointsInRegion(grid: Grid, point:Point, visited: Array<BooleanArray>): L
 }
 
 // **
-fun calculateSides(grid: Grid, point: Point): Int {
+
+// sprawdzamy 4 komorki
+// jesli next poza grid + 1
+// jeli next jest inny + 1
+fun calculateSides(grid: Grid, point: Point): Pair<List<Pair<Point,String>>,List<Pair<Point,String>>> {
     val stack = ArrayDeque<Point>().also { it.add(point) }
     val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
-    var sides = 0
-    val bufferSides = mutableListOf<Pair<Char,Point>>()
 
-    if(point !in grid) {
-        return 0
-    }
+    val verticalBuffer = mutableListOf<Pair<Point,String>>()
+    val horizontalBuffer = mutableListOf<Pair<Point,String>>()
+
+    val verticalDir = listOf(left,right)
+    val horizontalDir = listOf(up,down)
+
+//    if(point !in grid) {
+//        return buffer
+//    }
+
     while (stack.isNotEmpty()) {
         val currentPoint = stack.removeLast()
 //        println(currentPoint)
@@ -252,71 +349,92 @@ fun calculateSides(grid: Grid, point: Point): Int {
         visited[row][column] = true
 
         // check if neighbours are in grid
-        val pointUp = currentPoint + up
-        val pointRight = currentPoint + right
-        val pointDown = currentPoint + down
-        val pointLeft = currentPoint + left
+//        val pointUp = currentPoint + up
+//        val pointRight = currentPoint + right
+//        val pointDown = currentPoint + down
+//        val pointLeft = currentPoint + left
 
 
 //        println(pointUp !in grid)
 //        println(pointUp.type != type)
 
-        if(pointUp in grid) {
-            pointUp.type = grid[pointUp.row][pointUp.column]
-            if(pointUp.type != type) {
-                sides++
-//                bufferSides.add(up to pointUp)
-                bufferSides.add('u' to pointUp)
-            } else if(pointUp !in visited) {
-                stack.add(pointUp)
+        for(dir in horizontalDir) {
+            val newPoint = currentPoint + dir
+            if(newPoint in grid) {
+                newPoint.type = grid[newPoint.row][newPoint.column]
+                if(newPoint.type != type) {
+                    horizontalBuffer += newPoint to "r${newPoint.row}${row}"
+                } else if(newPoint !in visited) {
+                    stack.add(newPoint)
+//                    buffer += newPoint
+                }
+            } else {
+                horizontalBuffer += newPoint to "r${newPoint.row}${row}"
             }
-        } else {
-            sides++
-            bufferSides.add('u' to pointUp)
         }
 
-        if(pointRight in grid) {
-            pointRight.type = grid[pointRight.row][pointRight.column]
-            if(pointRight.type != type) {
-                sides++
-                bufferSides.add('r' to pointRight)
-            } else if(pointRight !in visited) {
-                stack.add(pointRight)
+        for(dir in verticalDir) {
+            val newPoint = currentPoint + dir
+            if(newPoint in grid) {
+                newPoint.type = grid[newPoint.row][newPoint.column]
+                if(newPoint.type != type) {
+                    verticalBuffer += newPoint to "r${newPoint.column}${column}"
+                } else if(newPoint !in visited) {
+                    stack.add(newPoint)
+//                    buffer += newPoint
+                }
+            } else {
+                verticalBuffer += newPoint to "r${newPoint.column}${column}"
             }
-        } else {
-            sides++
-            bufferSides.add('r' to pointRight)
         }
 
-        if(pointDown in grid) {
-            pointDown.type = grid[pointDown.row][pointDown.column]
-            if(pointDown.type != type) {
-                sides++
-                bufferSides.add('d' to pointDown)
-            } else if(pointDown !in visited) {
-                stack.add(pointDown)
-            }
-        } else {
-            sides++
-            bufferSides.add('d' to pointDown)
-        }
+//        if(pointUp in grid) {
+//            pointUp.type = grid[pointUp.row][pointUp.column]
+//            if(pointUp.type != type) {
+//                perimeter++
+//            } else if(pointUp !in visited) {
+//                stack.add(pointUp)
+//            }
+//        } else {
+//            perimeter++
+//        }
 
-        if(pointLeft in grid) {
-            pointLeft.type = grid[pointLeft.row][pointLeft.column]
-            if(pointLeft.type != type) {
-                sides++
-                bufferSides.add('l' to pointLeft)
-            } else if(pointLeft !in visited) {
-                stack.add(pointLeft)
-            }
-        } else {
-            sides++
-            bufferSides.add('l' to pointLeft)
-        }
+//        if(pointRight in grid) {
+//            pointRight.type = grid[pointRight.row][pointRight.column]
+//            if(pointRight.type != type) {
+//                perimeter++
+//            } else if(pointRight !in visited) {
+//                stack.add(pointRight)
+//            }
+//        } else {
+//            perimeter++
+//        }
+
+//        if(pointDown in grid) {
+//            pointDown.type = grid[pointDown.row][pointDown.column]
+//            if(pointDown.type != type) {
+//                perimeter++
+//            } else if(pointDown !in visited) {
+//                stack.add(pointDown)
+//            }
+//        } else {
+//            perimeter++
+//        }
+
+//        if(pointLeft in grid) {
+//            pointLeft.type = grid[pointLeft.row][pointLeft.column]
+//            if(pointLeft.type != type) {
+//                perimeter++
+//            } else if(pointLeft !in visited) {
+//                stack.add(pointLeft)
+//            }
+//        } else {
+//            perimeter++
+//        }
 
     }
 
-    val test = bufferSides.groupBy({it.second.row},{it.second.column})
-    println(test)
-    return sides
+//    println(perimeter)
+    return horizontalBuffer to verticalBuffer
 }
+
