@@ -2,6 +2,10 @@ package days.five
 import java.io.File
 import java.util.*
 
+import middle
+
+
+
 fun solveFiveDayFirstStar() {
 
     val (pagesAsString,rulesAsString) =
@@ -45,12 +49,6 @@ fun parseRules(rules: List<List<String>>): List<Pair<Int,Int>> = rules.mapNotNul
 }
 
 fun parsePages(pages:  List<List<String>>): List<List<Int>> = pages.map { it.map { it.toInt() } }
-
-fun <T> List<T>.middle(): T? {
-    if(this.isEmpty()) return null
-    val middleIndex = this.size/2
-    return this[middleIndex];
-}
 
 fun isPageCorrect(current: Int, pages: List<Int>,rules:  Map<Int, List<Int>> ): Boolean {
     val currentRules = rules[current]

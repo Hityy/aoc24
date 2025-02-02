@@ -1,5 +1,8 @@
 package days.six
 
+import column
+import row
+
 import java.io.File
 
 private typealias Point = Pair<Int, Int>
@@ -38,12 +41,6 @@ val charToNumber = mapOf(
     '.' to 0,
     '#' to 0,
 )
-
-val <T, A> Pair<T, A>.row: T
-    get() = this.first
-
-val <T, A>Pair<T, A>.column: A
-    get() = this.second
 
 
 // 4382 too high
