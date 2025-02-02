@@ -6,16 +6,39 @@ import kotlin.math.abs
 //private typealias Point = Pair<Int,Int>
 private typealias Grid = List<List<Char>>
 private typealias Direction = Pair<Int, Int>
+private data class Point(val row: Int, val column: Int, var type: Char) { }
+
+private operator fun Point.plus(dir: Direction): Point {
+    return Point(this.row + dir.row, this.column + dir.column, this.type)
+}
+
+private fun <T> include(grid: List<List<T>>, point: Point): Boolean =
+    point.row in grid.indices && point.column in grid[0].indices && grid[point.row][point.column] == point.type
+
+private fun include(grid: Array<BooleanArray>, point: Point): Boolean = grid[point.row][point.column] ?: false
+
+private operator fun <T> List<List<T>>.contains(point: Point) = include(this, point)
+private operator fun Array<BooleanArray>.contains(point: Point) = include(this, point)
+
+
+val up = -1 to 0
+val right = 0 to 1
+val down = 1 to 0
+val left = 0 to -1
+val directions = listOf(up, right, down, left)
+
+
+
+
 
 fun solveTwelveDayFirstStar() {
-
-    tests()
+//    tests()
 
     val grid = getGrid("src/days/twelve/src1.txt")
+
     val res = findRegions(grid)
         .map { it.first() to it.size }
-        .map { (point,area) -> area*calculatePerimeter(grid,point)}
-        .sum()
+        .sumOf { (point, area) -> area * calculatePerimeter(grid, point) }
 
     println(res)
 }
@@ -25,13 +48,12 @@ fun solveTwelveDaySecondStar() {
     val grid = getGrid("src/days/twelve/src1.txt")
     val res = findRegions(grid)
         .map { it.first() to it.size }
-        .map { (point, area) -> area * calculateAllSides(grid,point) }
-        .sum()
+        .sumOf { (point, area) -> area * calculateAllSides(grid, point) }
 
     println(res)
 }
 
-fun tests() {
+private fun tests() {
 
     val grid1 = listOf(
         listOf('A', 'A', 'A', 'A'),
@@ -41,10 +63,6 @@ fun tests() {
     )
 
 
-//    val gridA = listOf('A', 'A', 'A', 'A')
-//    val pointsA = gridA.mapIndexed { index, _ -> 0 to index }
-//    println(pointsA)
-    /// PERIMETERS
     println("PERIMETERS")
 
     grid1.forEach { println(it) }
@@ -68,7 +86,6 @@ fun tests() {
     grid2.forEach{ println(it) }
 
     val testPerimeterO = calculatePerimeter(grid2,Point(0,0,'O'))
-    println(testPerimeterO)
     println("testPerimeterO perimeter = 36 ${testPerimeterO == 36}")
 
     /// REGIONS
@@ -88,39 +105,22 @@ fun tests() {
 
     val grid3 = getGrid("src/days/twelve/test3.txt")
     val (horizontal,vertical) = calculateSides(grid3,Point(0,0,'E'))
-//    println(points)
 
-    println("STETSA")
-//    val levelMinut1 = points.filter { it.row == -1 }
-//    val level0 = points.filter { it.row == 0 }
-    val level1 = horizontal//.filter { it.first.row == 1 }
+
+    // Horizontal / Vectical sides count
+    val level1 = horizontal
         .groupBy { it.second }
         .mapValues { (_,list) -> mergeToSideHorizontal(list.sortedBy { it.first.column }) }
 
-    val level2 = vertical//.filter { it.first.row == 1 }
+    val level2 = vertical
         .groupBy { it.second }
         .mapValues { (_,list) -> mergeToSideVertical(list.sortedBy { it.first.row }) }
 
-//        .values
-//    val level2 = points.filter { it.row == 2 }
-//    val level3 = points.filter { it.row == 4 }
-
-//    println(levelMinut1)
-//    println(level0)
-    println(level1)
-    println(level2)
-
-    val res = level1.values.sum() + level2.values.sum()
-    println(res)
-//    println(level2)
-//    println(level3)
-
 //    val test = mergeToSideVertical(listOf(1,4,5,6,8,10,11,12,13).map { Point(it,0,'d') to "as"})
-//    println(test)
 
 }
 
-fun calculateAllSides(grid: Grid, point: Point): Int {
+private fun calculateAllSides(grid: Grid, point: Point): Int {
     val (horizontal,vertical) = calculateSides(grid,point)
 
     val level1 = horizontal
@@ -134,12 +134,11 @@ fun calculateAllSides(grid: Grid, point: Point): Int {
     return level1.values.sum() + level2.values.sum()
 }
 
-fun mergeToSideHorizontal(list: List<Pair<Point,String>>): Int {
+private fun mergeToSideHorizontal(list: List<Pair<Point,String>>): Int {
     var counter = 0
     for(index in 0 until list.size - 1 ) {
             val (p1,_) = list[index]
             val (p2,_) = list[index+1]
-//            println("$p1 $p2")
             if(abs(p2.column-p1.column) > 1) {
                 counter++
             }
@@ -147,12 +146,11 @@ fun mergeToSideHorizontal(list: List<Pair<Point,String>>): Int {
     return counter + 1
 }
 
-fun mergeToSideVertical(list: List<Pair<Point,String>>): Int {
+private fun mergeToSideVertical(list: List<Pair<Point,String>>): Int {
     var counter = 0
     for(index in 0 until list.size - 1 ) {
         val (p1,_) = list[index]
         val (p2,_) = list[index+1]
-//        println("$p1 $p2")
         if(abs(p2.row-p1.row) > 1) {
             counter++
         }
@@ -164,35 +162,13 @@ fun getGrid(path: String): List<List<Char>> {
     return File(path).readLines().map { it.toCharArray().toList() }
 }
 
-val up = -1 to 0
-val right = 0 to 1
-val down = 1 to 0
-val left = 0 to -1
-val directions = listOf<Direction>(up, right, down, left)
-
-data class Point(val row: Int, val column: Int, var type: Char) {
-//    constructor(point: Point, type: Char): this(point.row,point.column,type)
-}
-
-private operator fun Point.plus(dir: Direction): Point {
-    return Point(this.row + dir.row, this.column + dir.column, this.type)
-}
-
-fun <T> include(grid: List<List<T>>, point: Point): Boolean =
-    point.row in grid.indices && point.column in grid[0].indices && grid[point.row][point.column] == point.type
-
-fun include(grid: Array<BooleanArray>, point: Point): Boolean = grid[point.row][point.column] ?: false
-
-private operator fun <T> List<List<T>>.contains(point: Point) = include(this, point)
-private operator fun Array<BooleanArray>.contains(point: Point) = include(this, point)
-
 
 
 
 // sprawdzamy 4 komorki
 // jesli next poza grid + 1
 // jeli next jest inny + 1
-fun calculatePerimeter(grid: Grid, point: Point): Int {
+private fun calculatePerimeter(grid: Grid, point: Point): Int {
     val stack = ArrayDeque<Point>().also { it.add(point) }
     val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
     var perimeter = 0
@@ -270,7 +246,7 @@ fun calculatePerimeter(grid: Grid, point: Point): Int {
     return perimeter
 }
 
-fun findRegions(grid: Grid): List<List<Point>> {
+private fun findRegions(grid: Grid): List<List<Point>> {
     val regions = mutableListOf<List<Point>>()
     val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
 
@@ -282,7 +258,7 @@ fun findRegions(grid: Grid): List<List<Point>> {
         for(column in grid[0].indices) {
             if(!visited[row][column]) {
                 val type = grid[row][column]
-                regions += findPointsInRegion(grid,Point(row,column,type),visited)
+                regions.add(findPointsInRegion(grid,Point(row,column,type),visited))
             }
         }
     }
@@ -290,7 +266,7 @@ fun findRegions(grid: Grid): List<List<Point>> {
     return regions
 }
 
-fun findPointsInRegion(grid: Grid, point:Point, visited: Array<BooleanArray>): List<Point> {
+private fun findPointsInRegion(grid: Grid, point:Point, visited: Array<BooleanArray>): List<Point> {
 
     val stack = ArrayDeque<Point>().also { it + point }
     val points = mutableListOf<Point>()
@@ -310,7 +286,7 @@ fun findPointsInRegion(grid: Grid, point:Point, visited: Array<BooleanArray>): L
         points.add(currentPoint)
 
         for(dir in directions) {
-            stack += currentPoint + dir
+            stack.add(currentPoint + dir)
         }
 
     }
@@ -322,7 +298,7 @@ fun findPointsInRegion(grid: Grid, point:Point, visited: Array<BooleanArray>): L
 // sprawdzamy 4 komorki
 // jesli next poza grid + 1
 // jeli next jest inny + 1
-fun calculateSides(grid: Grid, point: Point): Pair<List<Pair<Point,String>>,List<Pair<Point,String>>> {
+private fun calculateSides(grid: Grid, point: Point): Pair<List<Pair<Point,String>>,List<Pair<Point,String>>> {
     val stack = ArrayDeque<Point>().also { it.add(point) }
     val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
 

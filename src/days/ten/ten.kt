@@ -1,11 +1,11 @@
 package days.ten
 import java.io.File
 
-typealias Grid = List<List<Char>>
-typealias Point = Pair<Row, Column>
-typealias Row = Int
-typealias Column = Int
-typealias Dir = Pair<Row, Column>
+private typealias Grid = List<List<Char>>
+private typealias Point = Pair<Row, Column>
+private typealias Row = Int
+private typealias Column = Int
+private typealias Dir = Pair<Row, Column>
 
 val up = -1 to 0
 val right = 0 to 1

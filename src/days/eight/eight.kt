@@ -3,8 +3,8 @@ import days.six.column
 import days.six.row
 import java.io.File
 
-typealias Point = Pair<Int,Int>
-typealias Vector = Pair<Int,Int>
+private typealias Point = Pair<Int,Int>
+private typealias Vector = Pair<Int,Int>
 
 data class Node(val point: Point,val type: Char) {}
 // 338 too high

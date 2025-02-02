@@ -1,9 +1,7 @@
-
+import days.fourteen.solveFourteenDayFirstStar
 
 
 fun main() {
-//    solveTwelveDayFirstStar()
-//    solveTwelveDaySecondStar()
-    solveThirteenfirstDay()
+    solveFourteenDayFirstStar()
 }
 

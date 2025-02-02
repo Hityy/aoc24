@@ -2,10 +2,10 @@ package days.six
 
 import java.io.File
 
-typealias Point = Pair<Int, Int>
-typealias Direction = Pair<Int, Int>
-typealias Grid = List<List<Int>>
-typealias CharGrid = List<List<Char>>
+private typealias Point = Pair<Int, Int>
+private typealias Direction = Pair<Int, Int>
+private typealias Grid = List<List<Int>>
+private typealias CharGrid = List<List<Char>>
 
 val guard = '^'
 val obstacle = '#'
