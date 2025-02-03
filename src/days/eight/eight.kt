@@ -1,6 +1,6 @@
 package days.eight
-import days.six.column
-import days.six.row
+import column
+import row
 import java.io.File
 
 private typealias Point = Pair<Int,Int>

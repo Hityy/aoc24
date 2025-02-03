@@ -1,7 +1,7 @@
-import days.six.column
-import days.six.row
 import java.io.File
 import kotlin.math.abs
+import column
+import row
 
 //private typealias Point = Pair<Int,Int>
 private typealias Grid = List<List<Char>>

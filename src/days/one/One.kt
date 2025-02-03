@@ -32,15 +32,4 @@ fun solveFirstStar() {
     val res = leftList.mapIndexed { index, l -> abs(l - rightList[index]) }.sum()
     println(res)
 
-    // val lines = File("./src1.txt")
-    // .readLines()
-    // .map {
-    //     val (left, right) = it.split("   ")
-    //     left.toLong() to right.toLong()
-    // }
-    // .sortedBy { it.first }  // Sortowanie po pierwszym elemencie (left)
-    // .sortedBy { it.second } // Sortowanie po drugim elemencie (right)
-    // .map { (first, second) -> abs(first - second) }  // Liczenie różnicy
-    // .sum()  // Sumowanie wyników
-
 }
