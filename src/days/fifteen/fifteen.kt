@@ -42,39 +42,26 @@ private operator fun Array<BooleanArray>.contains(point: Point) = include(this, 
 
 
 fun solveFifteenDayFirstStar() {
-    tests()
+//    tests()
 
-    val (grid, moves ) = getSource("src/days/fifteen/test.txt")
-
-//    val robot = findRobotPosition(grid)!!
-
-//    grid.forEach{ println(it) }
-//    println("\n")
-//    val n = move(grid,robot,'^')
-//    println(robot)
-//    println(n)
-//    grid.forEach{ println(it) }
-
-//    println("\n")
-//    move(grid,robot,'^')
-//    grid.forEach{ println(it) }
-//    for (move in moves) {
-//
-//    }
+    val (grid, moves ) = getSource("src/days/fifteen/src1.txt")
 
     var robot = findRobotPosition(grid)!!
-    grid.forEach{ println(it) }
+//    grid.forEach{ println(it) }
     for(m in moves) {
         val n = move(grid,robot,m)
         if(n != null) {
             robot = n
         }
-        println("\n")
-        println("move: $m")
-        println("ACTUAL: $n")
-        println("new robot position $robot")
-        grid.forEach{ println(it) }
+//        println("\n")
+//        println("move: $m")
+//        println("ACTUAL: $n")
+//        println("new robot position $robot")
+//        grid.forEach{ println(it) }
     }
+
+    val res = findAllBoxesPoints(grid).sumOf { (row,column) -> 100*row + column }
+    println(res)
 }
 
 fun getSource(path: String): Pair<List<MutableList<Char>>, List<Char>> {
@@ -101,11 +88,6 @@ fun tests() {
     verticalShiftTest("#.#OO#@.O.#", 5, '^')
 }
 
-//sealed  class TestDirection {
-//    object Vertical: TestDirection()
-//    object Horizontal: TestDirection()
-//}
-
 fun translateXY(testGrid: String): List<MutableList<Char>> {
     return testGrid.toList().map { mutableListOf(it) }
 }
@@ -119,18 +101,9 @@ fun horizontalShiftTest(testGrid: String,expected: String, n: Int, dir: Char) {
     move(listOf(list), robotPoint, dir)
     println(list.joinToString(""))
 
-//    val newRobotPoint = list.indexOf(robot)
-//    val dp = directions[dir]!!
-
-//    val expectedPoint = robotPoint + dp
-//    if( expectedPoint != 0 to newRobotPoint ) {
-//        throw Error("CASE $n FAILED WRONG ROBOT POSITION EXPTECTED: $expectedPoint GOT: ${0 to newRobotPoint}")
-//    }
-
     if(expected != list.joinToString("")) {
         throw Error("CASE $n FAILED")
     }
-
 
 }
 
@@ -163,12 +136,8 @@ fun move(grid: MutableGrid, position: Point, move: Char, parent: Char = '.'): Po
     val nextChar = grid[nextPoint.row][nextPoint.column]
     val currentChar = grid[position.row][position.column]
 
-//    println(nextChar)
 
     if (nextChar == wall) {
-//        if(currentChar == robot) {
-//            return position
-//        }
         return null
     }
 
@@ -181,7 +150,6 @@ fun move(grid: MutableGrid, position: Point, move: Char, parent: Char = '.'): Po
             grid[row][column] = '@'
             return nextPoint
         }
-        println("DASDAD")
         return position
     }
 
@@ -206,3 +174,14 @@ fun findRobotPosition(grid: Grid): Point? {
     return null
 }
 
+fun findAllBoxesPoints(grid: Grid): List<Point> {
+    val points = mutableListOf<Point>()
+    for (row in grid.indices) {
+        for (column in grid[row].indices) {
+            if (grid[row][column] == box) {
+                points.add(row to column)
+            }
+        }
+    }
+    return points
+}
