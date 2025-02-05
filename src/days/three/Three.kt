@@ -34,9 +34,11 @@ fun solveSecondStarThirdDay() {
     println("end")
 }
 
+// mul(123,456) -> listof(123,456)
 fun atoil(text: String): List<Int> {
     val buffer = mutableListOf<Int>()
     val iterationBuffer = mutableListOf<Char>()
+
     for (c in text) {
         if (c in '0'..'9') {
             iterationBuffer += c
@@ -47,6 +49,7 @@ fun atoil(text: String): List<Int> {
     }
     return buffer
 }
+
 
 fun skipCorrupted(memory: String): String {
     val dontRanges = """don't\(\)""".toRegex().findAll(memory).map { it.range.first }.toList()
