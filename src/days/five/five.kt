@@ -1,9 +1,8 @@
 package days.five
-import java.io.File
-import java.util.*
 
 import middle
-
+import java.io.File
+import java.util.*
 
 
 fun solveFiveDayFirstStar() {
@@ -34,7 +33,10 @@ fun solveFiveDaySecondStar() {
     val notCorrect = parsePages(pagesAsString).filter { !isPageListCorrect(it, rulesGroupLeftToRight) }
 
 
-    notCorrect.forEach{ bubleSortWithRules(it,rulesGroupRightToLeft) }
+//    notCorrect.forEach{ bubleSortWithRules(it,rulesGroupRightToLeft) }
+    for(pages in notCorrect){
+        bubleSortWithRules(pages,rulesGroupRightToLeft)
+    }
     val res = notCorrect.sumOf { it.middle() ?: 0 }
     println(res)
 }
@@ -87,6 +89,26 @@ fun bubleSortWithRules(pages: List<Int>, rules: Map<Int, List<Int>>) {
             }
         }
     }
+}
+
+
+fun quickSort(numbers: MutableList<Int>, low: Int = 0, high: Int = numbers.size -1): Unit =
+    if(low < high) {
+            val p = partition(numbers, low, high)
+            quickSort(numbers,low,p - 1)
+            quickSort(numbers,p+1,high)
+    } else Unit
+
+
+//[6,5,4,3,2,1]
+fun partition(numbers: MutableList<Int>, low: Int,high: Int): Int {
+    val p = numbers[high]
+    var idx = low - 1
+    for(i in low..<high) {
+        if(numbers[i] <= p) Collections.swap(numbers,i,++idx)
+    }
+    Collections.swap(numbers,++idx,high)
+    return idx
 }
 
 
