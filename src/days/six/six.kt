@@ -33,16 +33,6 @@ val dirsToChar = mapOf(
     right to '>',
 )
 
-val charToNumber = mapOf(
-    '^' to 1,
-    '>' to 1,
-    '<' to 1,
-    'v' to 1,
-    '.' to 0,
-    '#' to 0,
-)
-
-
 // 4382 too high
 // 4374 good !
 
@@ -58,17 +48,14 @@ fun solveSixDayFirstStar() {
 
 
 fun countPositions(grid: CharGrid): Int {
-    val guardPoint = findGuardPosition(grid)
-    if (guardPoint != null) {
-        val positions = traverseInGridByDir(
-            grid,
-            guardPoint,
-            listOf(guardPoint),
-            up
-        )
-        return positions.distinct().size
-    }
-    return 0
+    val guardPoint = findGuardPosition(grid) ?: throw IllegalStateException("Guard position not found")
+    val positions = traverseInGridByDir(
+        grid,
+        guardPoint,
+        listOf(guardPoint),
+        up
+    )
+    return positions.distinct().size
 }
 
 fun traverseInGridByDir(
@@ -82,8 +69,9 @@ fun traverseInGridByDir(
     }
 
     val (row, column) = currentPoint
-    if (obstacle == grid[row][column]) {
-        val nextDir = nextDirs.get(dir)!!
+
+    if (grid[row][column] == obstacle) {
+        val nextDir = nextDirs[dir] ?: throw Exception("Dir $dir not found")
         val nextPosition = (row + nextDir.row - dir.row) to (column + nextDir.column - dir.column)
 
         return traverseInGridByDir(
@@ -98,10 +86,32 @@ fun traverseInGridByDir(
     return traverseInGridByDir(grid, nextPosition, positions + nextPosition, dir)
 }
 
+fun traverseInGridByDir2(
+    grid: List<List<Char>>,
+    currentPoint: Point,
+    positions: List<Point>,
+    dir: Direction
+): List<Point> {
+    val (row, column) = currentPoint
+    return when {
+        currentPoint !in grid -> positions.dropLast(1)
+        grid[row][column] == obstacle -> {
+            val nextDir = nextDirs[dir] ?: throw Exception("Dir $dir not found")
+            val nextPosition = (row + nextDir.row - dir.row) to (column + nextDir.column - dir.column)
+            traverseInGridByDir(grid, nextPosition, positions.dropLast(1) + nextPosition, nextDir)
+        }
+
+        else -> {
+            val nextPosition = (row + dir.row) to (column + dir.column)
+            traverseInGridByDir(grid, nextPosition, positions + nextPosition, dir)
+        }
+    }
+}
+
 fun findGuardPosition(grid: CharGrid): Point? {
     for (row in grid.indices) {
         for (column in grid[0].indices) {
-            if (guard == grid[row][column]) {
+            if (grid[row][column] == guard) {
                 return row to column
             }
         }
@@ -123,7 +133,7 @@ fun solveSixDaySecondStar() {
 //        val distinct = visited.sumOf { it.toList().mapNotNull { charToNumber[it] }.sum() }
 //        println(distinct)
 
-    val pathPoints = visited.flatMapIndexed { rowIndex, row ->
+    val pathPoints: List<Point> = visited.flatMapIndexed { rowIndex, row ->
         row.toList().mapIndexedNotNull { colIndex, v ->
             if (v != '.') rowIndex to colIndex
             else null
@@ -194,7 +204,7 @@ fun dfsIterative(
         if (currentPoint !in grid)
             continue
 
-        visited[currentPoint.row][currentPoint.column] = dirsToChar[currentDir]!!
+        visited[currentPoint.row][currentPoint.column] = dirsToChar[currentDir] ?: throw Error("Dir $dir not found")
 
         val turn = straightOrRight(grid, currentPoint, currentDir)
         if (turn != null) {

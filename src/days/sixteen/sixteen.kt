@@ -100,6 +100,15 @@ fun findAllPaths(
 
         val newPoint = currentPoint + nextDir
 
+        if(newPoint !in grid) {
+            continue
+        }
+
+//        when {
+//            newPoint !in grid
+//        }
+
+
         val isSafe = newPoint in grid && visited[newPoint.row][newPoint.column] == false
         if (isSafe) {
             val nextChar = grid[newPoint.row][newPoint.column]

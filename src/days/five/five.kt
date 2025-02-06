@@ -6,38 +6,36 @@ import java.util.*
 
 
 fun solveFiveDayFirstStar() {
-
-    val (pagesAsString,rulesAsString) =
+    val (pages,rules) =
         File("src/days/five/src1.txt")
             .readLines()
             .map { it.split(',')}
             .partition { it.size > 2 }
 
-    val rules = parseRules(rulesAsString).groupBy({ it.first }, { it.second })
-    val res = parsePages(pagesAsString)
-        .filter { isPageListCorrect(it, rules) }
+    val rulesToRight = parseRules(rules).groupBy({ it.first }, { it.second })
+    val res = parsePages(pages)
+        .filter { isPageListCorrect(it, rulesToRight) }
         .sumOf { it.middle() ?: 0 }
 
     println(res)
 }
 
 fun solveFiveDaySecondStar() {
-    val (pagesAsString,rulesAsString) =
+    val (pages,rules) =
         File("src/days/five/src1.txt")
             .readLines()
             .map { it.split(',')}
             .partition { it.size > 2 }
 
-    val rulesGroupLeftToRight = parseRules(rulesAsString).groupBy({ it.first }, { it.second })
-    val rulesGroupRightToLeft = parseRules(rulesAsString).groupBy({ it.second }, { it.first })
-    val notCorrect = parsePages(pagesAsString).filter { !isPageListCorrect(it, rulesGroupLeftToRight) }
+    val rulesToRight = parseRules(rules).groupBy({ it.first }, { it.second })
+    val rulesToLeft = parseRules(rules).groupBy({ it.second }, { it.first })
+    val corrupted = parsePages(pages).filter { !isPageListCorrect(it, rulesToRight) }
 
-
-//    notCorrect.forEach{ bubleSortWithRules(it,rulesGroupRightToLeft) }
-    for(pages in notCorrect){
-        bubleSortWithRules(pages,rulesGroupRightToLeft)
+    for(p in corrupted){
+        bubleSortWithRules(p,rulesToLeft)
     }
-    val res = notCorrect.sumOf { it.middle() ?: 0 }
+
+    val res = corrupted.sumOf { it.middle() ?: 0 }
     println(res)
 }
 
@@ -58,7 +56,7 @@ fun isPageCorrect(current: Int, pages: List<Int>,rules:  Map<Int, List<Int>> ): 
 }
 
 fun isPageListCorrect(pages: List<Int>,rules:  Map<Int, List<Int>>): Boolean {
-    for(index in 0 until pages.size - 1 ) {
+    for(index in 0..<pages.size - 1) {
         val isCorrect = isPageCorrect(pages[index],pages.drop(index+1),rules)
         if(!isCorrect) {
             return false
