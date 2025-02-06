@@ -1,7 +1,6 @@
 package days.sixteen
 
 import column
-import days.ten.nextChar
 import row
 import java.io.File
 
@@ -34,6 +33,19 @@ val dirsToChar = mutableMapOf<Direction, Char>(
     left to '<',
 )
 
+val nextDir = mutableMapOf(
+    up to right,
+    right to down,
+    down to left,
+    left to up
+)
+
+val prevDir = mutableMapOf(
+    right to up,
+    down to right,
+    left to down,
+    up to left,
+)
 
 private operator fun Pair<Int, Int>.plus(dir: Direction): Point {
     return Point(this.row + dir.row, this.column + dir.column)
@@ -50,21 +62,34 @@ private operator fun Array<BooleanArray>.contains(point: Point) = include(this, 
 
 fun solveSixteenDayFirstStar() {
 
-    val grid = getGrid("test")
+//    val grid = getGrid("test")
 
-    grid.forEach(::println)
+//    grid.forEach(::println)
+//    val startPoint = findChar(grid, start) ?: throw Error("start point not found")
+//    val endPoint = findChar(grid, end)
+//    val path = mutableListOf<Point>(startPoint)
+//    val paths = mutableListOf<List<Pair<Int, Int>>>()
+//    val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
+//    visited[startPoint.row][startPoint.column] = true
+//    findAllPaths(grid, startPoint,up, path, paths, visited,0)
+//    grid.forEach(::println)
+//    println(paths)
+//
+    solve("test1")
+}
+
+fun solve(name: String) {
+    val grid = getGrid(name)
     val startPoint = findChar(grid, start) ?: throw Error("start point not found")
-    val endPoint = findChar(grid, end)
-
+//    val endPoint = findChar(grid, end)
     val path = mutableListOf<Point>(startPoint)
-    val paths = mutableListOf<List<Pair<Int,Int>>>()
+    val paths = mutableListOf<List<Pair<Int, Int>>>()
     val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
     visited[startPoint.row][startPoint.column] = true
-    findAllPaths(grid, startPoint, path, paths, visited)
+    findAllPaths(grid, startPoint, right, path, paths, visited,0)
     grid.forEach(::println)
     println(paths)
-
-
+//
 }
 
 fun getGrid(name: String) = File("src/days/sixteen/$name.txt")
@@ -85,46 +110,40 @@ fun findChar(grid: MutableGrid, symbol: Char): Point? {
 fun findAllPaths(
     grid: MutableGrid,
     currentPoint: Point,
+    currentDir: Direction,
     path: MutableList<Point>,
-    paths: MutableList<List<Pair<Int,Int>>>,
-    visited: Array<BooleanArray>
+    paths: MutableList<List<Pair<Int, Int>>>,
+    visited: Array<BooleanArray>,
+    score: Int
 ) {
     val currentChar = grid[currentPoint.row][currentPoint.column]
 
     if (currentChar == end) {
         paths += path.toList()
+        println(score)
         return
     }
 
-    for (nextDir in directions) {
-
-        val newPoint = currentPoint + nextDir
-
-        if(newPoint !in grid) {
-            continue
-        }
-
-//        when {
-//            newPoint !in grid
-//        }
-
-
-        val isSafe = newPoint in grid && visited[newPoint.row][newPoint.column] == false
-        if (isSafe) {
-            val nextChar = grid[newPoint.row][newPoint.column]
-            if (nextChar != wall) {
-                visited[newPoint.row][newPoint.column] = true
-                path.add(newPoint)
-
-                findAllPaths(grid, newPoint, path, paths, visited)
-
-                visited[newPoint.row][newPoint.column] = false
-                path.removeLast()
-            }
-        }
-    }
-
+    moveInDirection(grid,currentPoint+currentDir,currentDir,path,paths,visited,score +1)
+    moveInDirection(grid,currentPoint + nextDir[currentDir]!!,nextDir[currentDir]!!,path,paths,visited,score + 1000 +1)
+    moveInDirection(grid,currentPoint + prevDir[currentDir]!!, prevDir[currentDir]!!,path,paths,visited,score + 1000 +1)
     return
+}
+
+fun isSafe(point: Point, grid: Grid, visited: Array<BooleanArray>) =
+    point in grid && visited[point.row][point.column] == false && grid[point.row][point.column] != wall
+
+fun moveInDirection(grid: MutableGrid,newPoint: Point,dir: Direction, path: MutableList<Point>, paths: MutableList<List<Pair<Int, Int>>>, visited: Array<BooleanArray>,score: Int) {
+
+    if (isSafe(newPoint, grid, visited)) {
+        visited[newPoint.row][newPoint.column] = true
+        path.add(newPoint)
+
+        findAllPaths(grid, newPoint, dir,path, paths, visited,score)
+
+        visited[newPoint.row][newPoint.column] = false
+        path.removeLast()
+    }
 }
 
 //fun getDirections(dir: Direction) = directions.filterNot { it == directionOpposite[dir] }
