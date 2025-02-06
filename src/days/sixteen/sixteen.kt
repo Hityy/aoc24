@@ -1,5 +1,7 @@
 package days.sixteen
+
 import column
+import days.ten.nextChar
 import row
 import java.io.File
 
@@ -54,9 +56,11 @@ fun solveSixteenDayFirstStar() {
     val startPoint = findChar(grid, start) ?: throw Error("start point not found")
     val endPoint = findChar(grid, end)
 
-    val path = mutableListOf<Point>()
-    val paths = mutableListOf<Path>()
-    findPath(grid,startPoint,up,path,paths)
+    val path = mutableListOf<Point>(startPoint)
+    val paths = mutableListOf<List<Pair<Int,Int>>>()
+    val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
+    visited[startPoint.row][startPoint.column] = true
+    findAllPaths(grid, startPoint, path, paths, visited)
     grid.forEach(::println)
     println(paths)
 
@@ -78,36 +82,41 @@ fun findChar(grid: MutableGrid, symbol: Char): Point? {
     return null
 }
 
-fun findPath(grid: MutableGrid, currentPoint: Point,dir: Direction, path: MutableList<Point>, paths: MutableList<Path>): Boolean{
-
-    if(currentPoint !in grid) {
-        return false
-    }
-
+fun findAllPaths(
+    grid: MutableGrid,
+    currentPoint: Point,
+    path: MutableList<Point>,
+    paths: MutableList<List<Pair<Int,Int>>>,
+    visited: Array<BooleanArray>
+) {
     val currentChar = grid[currentPoint.row][currentPoint.column]
 
-    if(currentChar == wall) {
-        return false
+    if (currentChar == end) {
+        paths += path.toList()
+        return
     }
 
-    if(currentChar == end) {
-        path += currentPoint
-        paths += path
-        return true
-    }
+    for (nextDir in directions) {
 
-    path += currentPoint
-    grid[currentPoint.row][currentPoint.column] = dirsToChar[dir]!!
+        val newPoint = currentPoint + nextDir
 
-    for(nextDir in getDirections(dir)) {
-        if (findPath(grid, currentPoint + nextDir, nextDir, path, paths)) {
-            return true
+        val isSafe = newPoint in grid && visited[newPoint.row][newPoint.column] == false
+        if (isSafe) {
+            val nextChar = grid[newPoint.row][newPoint.column]
+            if (nextChar != wall) {
+                visited[newPoint.row][newPoint.column] = true
+                path.add(newPoint)
+
+                findAllPaths(grid, newPoint, path, paths, visited)
+
+                visited[newPoint.row][newPoint.column] = false
+                path.removeLast()
+            }
         }
     }
 
-    grid[currentPoint.row][currentPoint.column] = '.'
-    path.removeLast()
-    return false
+    return
 }
 
-fun getDirections(dir: Direction) = directions.filterNot { it == directionOpposite[dir] }
+//fun getDirections(dir: Direction) = directions.filterNot { it == directionOpposite[dir] }
+
