@@ -75,7 +75,7 @@ fun solveSixteenDayFirstStar() {
 //    grid.forEach(::println)
 //    println(paths)
 //
-    solve("test1")
+    solve("src1")
 }
 
 fun solve(name: String) {
@@ -86,9 +86,10 @@ fun solve(name: String) {
     val paths = mutableListOf<List<Pair<Int, Int>>>()
     val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }
     visited[startPoint.row][startPoint.column] = true
-    findAllPaths(grid, startPoint, right, path, paths, visited,0)
-    grid.forEach(::println)
-    println(paths)
+    val s = findAllPaths(grid, startPoint, right, path, paths, visited,0)
+//    grid.forEach(::println)
+//    println(paths)
+    println(s)
 //
 }
 
@@ -115,35 +116,41 @@ fun findAllPaths(
     paths: MutableList<List<Pair<Int, Int>>>,
     visited: Array<BooleanArray>,
     score: Int
-) {
+): Int{
     val currentChar = grid[currentPoint.row][currentPoint.column]
 
     if (currentChar == end) {
         paths += path.toList()
-        println(score)
-        return
+//        println(score)
+        return score
     }
 
-    moveInDirection(grid,currentPoint+currentDir,currentDir,path,paths,visited,score +1)
-    moveInDirection(grid,currentPoint + nextDir[currentDir]!!,nextDir[currentDir]!!,path,paths,visited,score + 1000 +1)
-    moveInDirection(grid,currentPoint + prevDir[currentDir]!!, prevDir[currentDir]!!,path,paths,visited,score + 1000 +1)
-    return
+    val score1 = moveInDirection(grid,currentPoint+currentDir,currentDir,path,paths,visited,score +1)
+    val score2 = moveInDirection(grid,currentPoint + nextDir[currentDir]!!,nextDir[currentDir]!!,path,paths,visited,score + 1000 +1)
+    val score3 = moveInDirection(grid,currentPoint + prevDir[currentDir]!!, prevDir[currentDir]!!,path,paths,visited,score + 1000 +1)
+    return minOf(score1,score2,score3)
 }
 
 fun isSafe(point: Point, grid: Grid, visited: Array<BooleanArray>) =
-    point in grid && visited[point.row][point.column] == false && grid[point.row][point.column] != wall
+    point in grid &&
+            !visited[point.row][point.column] &&
+            grid[point.row][point.column] != wall &&
+            grid[point.row][point.column] != start
 
-fun moveInDirection(grid: MutableGrid,newPoint: Point,dir: Direction, path: MutableList<Point>, paths: MutableList<List<Pair<Int, Int>>>, visited: Array<BooleanArray>,score: Int) {
-
+fun moveInDirection(grid: MutableGrid,newPoint: Point,dir: Direction, path: MutableList<Point>, paths: MutableList<List<Pair<Int, Int>>>, visited: Array<BooleanArray>,score: Int): Int {
+    println(newPoint)
     if (isSafe(newPoint, grid, visited)) {
         visited[newPoint.row][newPoint.column] = true
         path.add(newPoint)
 
-        findAllPaths(grid, newPoint, dir,path, paths, visited,score)
+        val s = findAllPaths(grid, newPoint, dir,path, paths, visited,score)
 
         visited[newPoint.row][newPoint.column] = false
         path.removeLast()
+        return s
     }
+
+    return Int.MAX_VALUE
 }
 
 //fun getDirections(dir: Direction) = directions.filterNot { it == directionOpposite[dir] }
