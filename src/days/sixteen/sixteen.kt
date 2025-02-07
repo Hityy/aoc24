@@ -3,6 +3,7 @@ package days.sixteen
 import column
 import row
 import java.io.File
+import java.util.*
 
 val start = 'S'
 val end = 'E'
@@ -75,7 +76,8 @@ fun solveSixteenDayFirstStar() {
 //    grid.forEach(::println)
 //    println(paths)
 //
-    solve("src1")
+//    solve("src1")
+    solveWithAStar("test1")
 }
 
 fun solve(name: String) {
@@ -91,6 +93,14 @@ fun solve(name: String) {
 //    println(paths)
     println(s)
 //
+}
+
+fun solveWithAStar(name: String) {
+    val grid = getGrid(name)
+    val startPoint = findChar(grid, start) ?: throw Error("start point not found")
+    val endPoint = findChar(grid, end) ?: throw Error("start point not found")
+    val result = astar(grid,startPoint, right,endPoint )
+    println(result)
 }
 
 fun getGrid(name: String) = File("src/days/sixteen/$name.txt")
@@ -155,3 +165,74 @@ fun moveInDirection(grid: MutableGrid,newPoint: Point,dir: Direction, path: Muta
 
 //fun getDirections(dir: Direction) = directions.filterNot { it == directionOpposite[dir] }
 
+fun astar(grid: MutableGrid, start: Point,dir: Direction, end: Point): Int? {
+    val frontier = PriorityQueue<Pair<Pair<Point,Direction>,Int>>(compareBy { it.second})
+    frontier.add((start to right) to 0)
+    val cameFrom = mutableMapOf<Point, Point?>(start to null)
+    val costSoFar = mutableMapOf<Point, Int>(start to 0)
+
+
+    while(frontier.isNotEmpty()) {
+        val (pd,_) = frontier.remove()
+        val (currentPoint, currentDir) = pd
+        if(currentPoint == end) {
+            break
+        }
+
+        for ((npd,cost) in getNeighbors(grid,currentPoint,currentDir)) {
+            val (nextPoint,nextDir) = npd
+            val newCost = costSoFar.getOrDefault(currentPoint,0) + cost
+            if(nextPoint !in cameFrom || newCost < costSoFar[nextPoint]!!) {
+                costSoFar[nextPoint] = newCost
+                frontier.add((nextPoint to nextDir) to newCost)
+                cameFrom[nextPoint] = currentPoint
+            }
+        }
+    }
+
+    if(cameFrom[end] == null) {
+        return null
+    }
+
+    var current = end;
+    val path = mutableListOf<Point>()
+    while(current != start) {
+        path.add(current)
+        current = cameFrom[current]!!
+    }
+    path += start
+    path.reverse()
+
+//    println(path)
+    return costSoFar[end]!!
+}
+
+fun getNeighbors(grid: Grid, point: Point, dir: Direction): List<Pair<Pair<Point,Direction>,Int>> {
+    val neighbors = mutableListOf<Pair<Pair<Point,Direction>,Int>>()
+
+    val straight = point + dir
+
+    val leftDir = prevDir[dir]!!
+    val left = point + leftDir
+
+    val rightDir = nextDir[dir]!!
+    val right = point + rightDir
+
+    if(straight in grid && grid[straight.row][straight.column] != wall) {
+        neighbors += (straight to dir) to 1
+    }
+
+    if(left in grid && grid[left.row][left.column] != wall) {
+        neighbors += (left to leftDir) to 1001
+    }
+
+    if(right in grid && grid[right.row][right.column] != wall) {
+        neighbors += (right to rightDir) to 1001
+    }
+
+    return neighbors
+}
+
+fun graphCost(currentPoint: Point, currentDir: Direction, nextPoint: Point, nextDir: Direction): Int {
+    return 1
+}
