@@ -4,6 +4,7 @@ import column
 import days.ten.nextChar
 import row
 import java.io.File
+import java.util.PriorityQueue
 
 val start = 'S'
 val end = 'E'
@@ -108,7 +109,6 @@ fun findAllPaths(
 //            newPoint !in grid
 //        }
 
-
         val isSafe = newPoint in grid && visited[newPoint.row][newPoint.column] == false
         if (isSafe) {
             val nextChar = grid[newPoint.row][newPoint.column]
@@ -129,3 +129,27 @@ fun findAllPaths(
 
 //fun getDirections(dir: Direction) = directions.filterNot { it == directionOpposite[dir] }
 
+fun astar(grid: Grid, start: Point, end: Point) {
+    val frontier = PriorityQueue<Point>()
+    frontier.add(start)
+    val cameFrom = mapOf(start to null)
+
+
+    while(frontier.isNotEmpty()) {
+        val currentPoint = frontier.remove()
+
+        if(currentPoint == end) {
+            break
+        }
+
+        for (nextPoint in getNeighbors(grid,currentPoint)) {
+            if(nextPoint !in  cameFrom) {
+
+            }
+        }
+    }
+}
+
+fun getNeighbors(grid: Grid, point: Point): List<Point> {
+
+}
