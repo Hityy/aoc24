@@ -69,32 +69,31 @@ fun solveSixteenDayFirstStar() {
 }
 
 
-fun getPathBlockers(grid: Grid, path: List<Pair<Point,Direction>>): List<Pair<Pair<Point, Direction>, Point >> {
-    val map = path.associate { it.first to true }
+fun getPathBlockers(grid: Grid, pathMap: Map<Point,Direction>): List<Pair<Pair<Point, Direction>, Point >> {
+    val p = pathMap.toList()
 
-    val pathBlockers = path.zipWithNext { curr, next ->
+    val pathBlockers = p.zipWithNext { curr, next ->
         if (directions
                 .map { curr.first + it to curr.second }
-                .any { it.first in grid && it.first !in map && grid[it.first.row][it.first.column] != wall }
-        ) curr to next.first else null
+                .any { it.first in grid && it.first !in pathMap && grid[it.first.row][it.first.column] != wall }
+        ) curr to next.first
+        else null
     }.filterNotNull()
-
     return pathBlockers
 }
 
+
 fun solveSisteenDaySecondStar() {
-    val grid = getGrid("src1")
+    val grid = getGrid("test1")
     val startPoint = findChar(grid, start) ?: throw Error("start point not found")
     val endPoint = findChar(grid, end) ?: throw Error("start point not found")
+    val (pathMap, scoreSoFar) = astar(grid, startPoint, right, endPoint,0) ?: throw Error("path to end not found")
 
-    val (path, scoreSoFar) = astar(grid, startPoint, right, endPoint,0) ?: throw Error("path to end not found")
-    val (lastPoint,_) = path.last()
-    val score = scoreSoFar[lastPoint]!!
-    val pathBlockers = getPathBlockers(grid, path)
+    val score = scoreSoFar[endPoint]!!
+    val pathBlockers = getPathBlockers(grid, pathMap)
 
-
-    var buffer = path.toMutableList()
-    var blockers = pathBlockers.toMutableList()
+    val buffer = pathMap.toMutableMap()
+    val blockers = pathBlockers.toMutableList()
 
     var index = 0
     while(index != blockers.size -1) {
@@ -102,7 +101,7 @@ fun solveSisteenDaySecondStar() {
         val (row, column) = blocker
         val (start,startDir) = newStartWithDir
         val newStartScore = scoreSoFar[start] ?: throw Error("start score not found")
-        grid[row][column] = '#'
+        grid[row][column] = wall
 
         val result = astar(grid, start, startDir, endPoint, newStartScore)
 
@@ -111,15 +110,15 @@ fun solveSisteenDaySecondStar() {
             val (possibleNewPath, newScoreMap) = result
 
             if(newScoreMap[endPoint] == score) {
+                buffer.putAll(possibleNewPath)
 
-                buffer += possibleNewPath.filter { it.first !in buffer.map { it.first } }
                 val newBlockers = getPathBlockers(grid, buffer).filter { it !in blockers }
                 blockers += newBlockers
 
             }
         }
 
-        grid[row][column] = '.'
+        grid[row][column] = empty
         index++
     }
 
@@ -231,7 +230,8 @@ fun moveInDirection(
     return Int.MAX_VALUE
 }
 
-fun astar(grid: MutableGrid, start: Point, dir: Direction, end: Point,initialScore: Int): Pair<MutableList<Pair<Point, Direction>>,MutableMap<Point,Int>>? {
+fun astar(grid: MutableGrid, start: Point, dir: Direction, end: Point,initialScore: Int): Pair<Map<Point, Direction>,Map<Point,Int>>? {
+//fun astar(grid: MutableGrid, start: Point, dir: Direction, end: Point,initialScore: Int): Pair<MutableList<Pair<Point, Direction>>,MutableMap<Point,Int>>? {
     val frontier = PriorityQueue<Pair<Pair<Point, Direction>, Int>>(compareBy { it.second })
     frontier.add((start to dir) to initialScore)
     val cameFrom = mutableMapOf<Point, Pair<Point, Direction>?>(start to null)
@@ -271,7 +271,7 @@ fun astar(grid: MutableGrid, start: Point, dir: Direction, end: Point,initialSco
     path += start to right
     path.reverse()
 
-    return path to costSoFar
+    return path.toMap() to costSoFar
 }
 
 fun getNeighbors(grid: Grid, point: Point, dir: Direction): List<Pair<Pair<Point, Direction>, Int>> {
