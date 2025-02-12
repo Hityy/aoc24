@@ -65,21 +65,7 @@ private operator fun Array<BooleanArray>.contains(point: Point) = include(this, 
 
 
 fun solveSixteenDayFirstStar() {
-    solveWithAStar("test1")
-}
-
-
-fun getPathBlockers(grid: Grid, pathMap: Map<Point,Direction>): List<Pair<Pair<Point, Direction>, Point >> {
-    val p = pathMap.toList()
-
-    val pathBlockers = p.zipWithNext { curr, next ->
-        if (directions
-                .map { curr.first + it to curr.second }
-                .any { it.first in grid && it.first !in pathMap && grid[it.first.row][it.first.column] != wall }
-        ) curr to next.first
-        else null
-    }.filterNotNull()
-    return pathBlockers
+    solveWithDijkstra("test1")
 }
 
 
@@ -87,7 +73,7 @@ fun solveSisteenDaySecondStar() {
     val grid = getGrid("test1")
     val startPoint = findChar(grid, start) ?: throw Error("start point not found")
     val endPoint = findChar(grid, end) ?: throw Error("start point not found")
-    val (pathMap, scoreSoFar) = astar(grid, startPoint, right, endPoint,0) ?: throw Error("path to end not found")
+    val (pathMap, scoreSoFar) = dijkstra(grid, startPoint, right, endPoint,0) ?: throw Error("path to end not found")
 
     val score = scoreSoFar[endPoint]!!
     val pathBlockers = getPathBlockers(grid, pathMap)
@@ -103,10 +89,9 @@ fun solveSisteenDaySecondStar() {
         val newStartScore = scoreSoFar[start] ?: throw Error("start score not found")
         grid[row][column] = wall
 
-        val result = astar(grid, start, startDir, endPoint, newStartScore)
+        val result = dijkstra(grid, start, startDir, endPoint, newStartScore)
 
         if (result != null) {
-
             val (possibleNewPath, newScoreMap) = result
 
             if(newScoreMap[endPoint] == score) {
@@ -114,7 +99,6 @@ fun solveSisteenDaySecondStar() {
 
                 val newBlockers = getPathBlockers(grid, buffer).filter { it !in blockers }
                 blockers += newBlockers
-
             }
         }
 
@@ -136,11 +120,11 @@ fun printPath(grid: Grid, path: List<Pair<Point,Direction>>) {
 }
 
 
-fun solveWithAStar(name: String) {
+fun solveWithDijkstra(name: String) {
     val grid = getGrid(name)
     val startPoint = findChar(grid, start) ?: throw Error("start point not found")
     val endPoint = findChar(grid, end) ?: throw Error("start point not found")
-    val result = astar(grid, startPoint, right, endPoint,0)
+    val result = dijkstra(grid, startPoint, right, endPoint,0)
     if (result != null) {
         println(result.first)
     }
@@ -161,79 +145,10 @@ fun findChar(grid: MutableGrid, symbol: Char): Point? {
     return null
 }
 
-fun findAllPaths(
-    grid: MutableGrid,
-    currentPoint: Point,
-    currentDir: Direction,
-    path: MutableList<Point>,
-    paths: MutableList<List<Pair<Int, Int>>>,
-    visited: Array<BooleanArray>,
-    score: Int
-): Int {
-    val currentChar = grid[currentPoint.row][currentPoint.column]
-
-    if (currentChar == end) {
-        paths += path.toList()
-//        println(score)
-        return score
-    }
-
-    val score1 = moveInDirection(grid, currentPoint + currentDir, currentDir, path, paths, visited, score + 1)
-    val score2 = moveInDirection(
-        grid,
-        currentPoint + nextDir[currentDir]!!,
-        nextDir[currentDir]!!,
-        path,
-        paths,
-        visited,
-        score + 1000 + 1
-    )
-    val score3 = moveInDirection(
-        grid,
-        currentPoint + prevDir[currentDir]!!,
-        prevDir[currentDir]!!,
-        path,
-        paths,
-        visited,
-        score + 1000 + 1
-    )
-    return minOf(score1, score2, score3)
-}
-
-fun isSafe(point: Point, grid: Grid, visited: Array<BooleanArray>) =
-    point in grid &&
-            !visited[point.row][point.column] &&
-            grid[point.row][point.column] != wall &&
-            grid[point.row][point.column] != start
-
-fun moveInDirection(
-    grid: MutableGrid,
-    newPoint: Point,
-    dir: Direction,
-    path: MutableList<Point>,
-    paths: MutableList<List<Pair<Int, Int>>>,
-    visited: Array<BooleanArray>,
-    score: Int
-): Int {
-    println(newPoint)
-    if (isSafe(newPoint, grid, visited)) {
-        visited[newPoint.row][newPoint.column] = true
-        path.add(newPoint)
-
-        val s = findAllPaths(grid, newPoint, dir, path, paths, visited, score)
-
-        visited[newPoint.row][newPoint.column] = false
-        path.removeLast()
-        return s
-    }
-
-    return Int.MAX_VALUE
-}
-
-fun astar(grid: MutableGrid, start: Point, dir: Direction, end: Point,initialScore: Int): Pair<Map<Point, Direction>,Map<Point,Int>>? {
-//fun astar(grid: MutableGrid, start: Point, dir: Direction, end: Point,initialScore: Int): Pair<MutableList<Pair<Point, Direction>>,MutableMap<Point,Int>>? {
+fun dijkstra(grid: MutableGrid, start: Point, dir: Direction, end: Point,initialScore: Int): Pair<Map<Point, Direction>,Map<Point,Int>>? {
     val frontier = PriorityQueue<Pair<Pair<Point, Direction>, Int>>(compareBy { it.second })
     frontier.add((start to dir) to initialScore)
+
     val cameFrom = mutableMapOf<Point, Pair<Point, Direction>?>(start to null)
     val costSoFar = mutableMapOf<Point, Int>(start to initialScore)
 
@@ -299,6 +214,21 @@ fun getNeighbors(grid: Grid, point: Point, dir: Direction): List<Pair<Pair<Point
 
     return neighbors
 }
+
+fun getPathBlockers(grid: Grid, pathMap: Map<Point,Direction>): List<Pair<Pair<Point, Direction>, Point >> {
+    val p = pathMap.toList()
+
+    val pathBlockers = p.zipWithNext { curr, next ->
+        if (directions
+                .map { curr.first + it to curr.second }
+                .any { it.first in grid && it.first !in pathMap && grid[it.first.row][it.first.column] != wall }
+        ) curr to next.first
+        else null
+    }.filterNotNull()
+    return pathBlockers
+}
+
+
 
 fun findPathsDFSIterative(grid: Grid,start: Point,startDir: Direction, end: Point): List<Pair<List<Point>,Int>> {
     val paths = mutableListOf<Pair<List<Point>,Int>>()

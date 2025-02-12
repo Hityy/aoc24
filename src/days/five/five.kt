@@ -1,8 +1,8 @@
 package days.five
 
-import middle
 import java.io.File
 import java.util.*
+import kotlin.time.measureTime
 
 
 fun solveFiveDayFirstStar() {
@@ -11,13 +11,14 @@ fun solveFiveDayFirstStar() {
             .readLines()
             .map { it.split(',')}
             .partition { it.size > 2 }
+            .let { it.first.map { it.map{ it.toInt() } } to it.second.flatten() }
 
-    val rulesToRight = parseRules(rules).groupBy({ it.first }, { it.second })
-    val res = parsePages(pages)
-        .filter { isPageListCorrect(it, rulesToRight) }
-        .sumOf { it.middle() ?: 0 }
-
-    println(res)
+//    val rulesToRight = parseRules(rules).groupBy({ it.first }, { it.second })
+//    val res = parsePages(pages)
+//        .filter { isPageListCorrect(it, rulesToRight) }
+//        .sumOf { it.middle() ?: 0 }
+//
+//    println(res)
 }
 
 fun solveFiveDaySecondStar() {
@@ -26,23 +27,63 @@ fun solveFiveDaySecondStar() {
             .readLines()
             .map { it.split(',')}
             .partition { it.size > 2 }
+            .let { it.first.map { it.map{ it.toInt() } } to it.second.flatten().dropLast(1) }
 
-    val rulesToRight = parseRules(rules).groupBy({ it.first }, { it.second })
-    val rulesToLeft = parseRules(rules).groupBy({ it.second }, { it.first })
-    val corrupted = parsePages(pages).filter { !isPageListCorrect(it, rulesToRight) }
+//    val rulesToRight = parseRules(rules).groupBy({ it.first }, { it.second })
+//    val rulesToLeft = parseRules(rules).groupBy({ it.second }, { it.first })
+//    val corrupted = parsePages(pages).filter { !isPageListCorrect(it, rulesToRight) }
+//
+//    for(p in corrupted){
+//        bubleSortWithRules(p,rulesToLeft)
+//    }
+//
+    val time = measureTime {
+        val rulesGraph = Array<Array<Boolean>?>(100) { null }
+        for(ruleString in rules) {
+            val (c1, c2) = ruleString.split('|')
+            val index = c2.toInt()
+            val map = rulesGraph[index] ?: Array(100) { false }
+            map[c1.toInt()] = true
+            rulesGraph[index] = map
+        }
 
-    for(p in corrupted){
-        bubleSortWithRules(p,rulesToLeft)
+        var sum = 0
+
+        for(pageList in pages) {
+            val pagesSize = pageList.size
+            var index = 0
+            var page: Int
+            var nextPage: Int
+            while(index < pagesSize - 1) {
+                page = pageList[index]
+                nextPage = pageList[index + 1]
+                val rule = rulesGraph[nextPage]
+                if(rule != null && rule[page]) {
+                    index++
+                }  else {
+                    break
+                }
+            }
+
+            if(index == pagesSize - 1){
+                sum += pageList[pageList.size/2]
+            }
+        }
     }
+//        println(sum)
 
-    val res = corrupted.sumOf { it.middle() ?: 0 }
-    println(res)
+    println(time)
+
+//    println(pp)
+
+//    val res = corrupted.sumOf { it.middle() ?: 0 }
+//    println(res)
 }
 
-fun parseRules(rules: List<List<String>>): List<Pair<Int,Int>> = rules.mapNotNull {
-    val value = it.first()
-    if (value.length > 1) {
-        val (first,second) =  value.split("|")
+fun parseRules(rules: List<String>): List<Pair<Int,Int>> = rules.mapNotNull {
+//    val value = it.first()
+    if ( it.length > 1) {
+        val (first,second) = it.split("|")
         first.toInt() to second.toInt()
     }
     else null

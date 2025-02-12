@@ -8,8 +8,6 @@ fun solveSecondDayFirstStar() {
         File("src/days/two/src1.txt")
             .readLines()
             .map { it.split(" ").map { it.toInt() } }
-//            .filter { it.zipWithNext { curr, next -> abs(curr - next ) <= 3}.all { it } }
-//            .filter { it.zipWithNext { curr, next -> curr != next }.all { it } }
             .filter { isLevelValidByRules(it) && isLevelIncOrDec(it) }
             .size
 
