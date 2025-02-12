@@ -160,82 +160,174 @@ fun test1() {
 //    println(output)
 
 
-//    A=2024 program 0,1,5,4,3,0
-    val program = parseProgram("0,1,5,4,3,0")
-    comboOperands[registerA] = 2024
-//var counter = 0
+////    A=2024 program 0,1,5,4,3,0
+//    val program = parseProgram("0,1,5,4,3,0")
+//    comboOperands[registerA] = 2024
+//    while(instructionPointer < program.size) {
+//        val opcode = program[instructionPointer]
+//        val operand = program[instructionPointer + 1]
+//        println("$opcode,$operand")
+//        val instruction = instructions[opcode]
+//        instruction(operand)
+////        println("pointer $instructionPointer")
+////        println("registerA: ${comboOperands[registerA]}")
+////        counter++
+//    }
+//
+//    println(output)
+
+
+//    //    B=29 program 1,7
+//    val program = parseProgram("1,7")
+//    comboOperands[registerB] = 29
+//    while(instructionPointer < program.size) {
+//        val opcode = program[instructionPointer]
+//        val operand = program[instructionPointer + 1]
+//        println("$opcode,$operand")
+//        val instruction = instructions[opcode]
+//        instruction(operand)
+//    }
+//
+//    println(comboOperands[registerB])
+
+    //    B=2024 C = 43690 program 4,0
+//    val program = parseProgram("4,0")
+//    comboOperands[registerB] = 2024
+//    comboOperands[registerC] = 43690
+//    while(instructionPointer < program.size) {
+//        val opcode = program[instructionPointer]
+//        val operand = program[instructionPointer + 1]
+//        println("$opcode,$operand")
+//        val instruction = instructions[opcode]
+//        instruction(operand)
+//    }
+//// B to 44354
+//    println(comboOperands[registerB])
+
+//    Register A: 729
+//    Register B: 0
+//    Register C: 0
+//
+//    Program: 0,1,5,4,3,0
+
+//    val time = measureTime {
+//        val program = parseProgram("0,1,5,4,3,0")
+//        comboOperands[registerA] = 729
+//        comboOperands[registerB] = 0
+//        comboOperands[registerC] = 0
+//        while(instructionPointer < program.size) {
+//            val opcode = program[instructionPointer]
+//            val operand = program[instructionPointer + 1]
+////            println("$opcode,$operand")
+//            val instruction = instructions[opcode]
+//            instruction(operand)
+//        }
+//    }
+//    println(time)
+//    println(output)
+//    println("//    4,6,3,5,6,3,5,2,1,0.")
+
+
+
+//    Register A: 47006051
+//Register B: 0
+//Register C: 0
+//
+//Program: 2,4,1,3,7,5,1,5,0,3,4,3,5,5,3,0
+
+    val program = parseProgram("2,4,1,3,7,5,1,5,0,3,4,3,5,5,3,0")
+    comboOperands[registerA] = 47006051
+    comboOperands[registerB] = 0
+    comboOperands[registerC] = 0
     while(instructionPointer < program.size) {
-        val (opcode,operand) = program[instructionPointer]
-        println("$opcode,$operand")
+        val opcode = program[instructionPointer]
+        val operand = program[instructionPointer + 1]
         val instruction = instructions[opcode]
         instruction(operand)
-//    if(counter > 50) {
-//        break
-//    }
-//        println("pointer $instructionPointer")
-//        println("registerA: ${comboOperands[registerA]}")
-//        counter++
     }
 
-    println(output)
-
-
+    println(output.joinToString(","))
+//    4,6,3,5,6,3,5,2,1,0.
 
 }
 
-fun parseProgram(input: String) = input.split(',').map(String::toInt).chunked(2)
+fun parseProgram(input: String) = input.split(',').map(String::toInt)//.chunked(2)
+
 
 
 val adv = fun (operand: Int) {
     val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in adv")
     val numerator = comboOperands[registerA] ?: throw Error("Not allowed value in registerA: $operand")
-    val denominator = 2.0.pow(value.toDouble()).toLong()
+    val denominator = 2 shl value - 1
     val result = numerator / denominator
-    if(result > Int.MAX_VALUE) throw Error("Not allowed result INT: $result")
+//    if(result > Int.MAX_VALUE) throw Error("Not allowed result INT: $result")
 
-    comboOperands[registerA] = result.toInt()
-    println("adv $result")
-    instructionPointer++
+//    println("adv $result")
+    comboOperands[registerA] = result
+    instructionPointer += 2
 }
 
 val bxl = fun(operand: Int) {
-
-    instructionPointer++
+//    val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in bst")
+    val B = comboOperands[registerB] ?: throw Error("Not allowed operand: $operand in bst")
+    val result = B xor operand
+    comboOperands[registerB] = result
+    instructionPointer += 2
 }
 
 val bst = fun(operand: Int) {
     val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in bst")
     val result = value % 8
     comboOperands[registerB] = result
-    instructionPointer++
+    instructionPointer += 2
 }
 
 val jnz = fun(operand: Int) {
     if(comboOperands[registerA] == 0) {
-        println("BREAK!!!")
-        instructionPointer = 15
+        instructionPointer = 17
         return
     }
+    println("jnz = $operand $instructionPointer")
     instructionPointer = operand*2
 }
 
 val bxc = fun(operand: Int) {
-    instructionPointer++
+    val B = comboOperands[registerB] ?: throw Error("Not allowed operand: $operand in bst")
+    val C = comboOperands[registerC] ?: throw Error("Not allowed operand: $operand in bst")
+    val result = B xor C
+    comboOperands[registerB] = result
+    instructionPointer += 2
 }
 
 val out = fun (operand: Int) {
     val value = comboOperands[operand]  ?: throw Error("Not allowed operand: $operand in out")
     val result = value % 8
     output += result
-    instructionPointer++
+    instructionPointer += 2
 }
 
 val bdv  = fun (operand: Int) {
-    instructionPointer++
+    val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in bdv")
+    val numerator = comboOperands[registerA] ?: throw Error("Not allowed value in registerA: $operand")
+//    val denominator = 2.0.pow(value.toDouble()).toLong()
+    val denominator = 2 shl value - 1
+    val result = numerator / denominator
+//    if(result > Int.MAX_VALUE) throw Error("Not allowed result INT: $result")
+
+    comboOperands[registerB] = result.toInt()
+    instructionPointer += 2
 }
 
 val cdv = fun (operand: Int) {
-    instructionPointer++
+    val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in cdv")
+    val numerator = comboOperands[registerA] ?: throw Error("Not allowed value in registerA: $operand")
+    val denominator = 2.0.pow(value.toDouble()).toLong()
+//    val denominator = 2 shl value - 1
+    val result = numerator / denominator
+//    if(result > Int.MAX_VALUE) throw Error("Not allowed result INT: $result")
+
+    comboOperands[registerC] = result.toInt()
+    instructionPointer += 2
 }
 
 val output = mutableListOf<Int>()
@@ -245,3 +337,4 @@ val comboOperands = arrayOf(0,1,2,3,0,0,0,null) // 1, 2, 3 A, B ,C, Error
 val registerA = 4
 val registerB = 5
 val registerC = 6
+val cacheModulo8 = mutableMapOf<Int,Int>()
