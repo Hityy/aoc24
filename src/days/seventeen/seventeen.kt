@@ -1,6 +1,6 @@
 package days.seventeen
 
-import kotlin.math.pow
+import days.two.remove
 
 
 // 3 bit computer
@@ -235,42 +235,40 @@ fun test1() {
 //
 //Program: 2,4,1,3,7,5,1,5,0,3,4,3,5,5,3,0
 
-    val program = parseProgram("2,4,1,3,7,5,1,5,0,3,4,3,5,5,3,0")
-    comboOperands[registerA] = 47006051
-    comboOperands[registerB] = 0
-    comboOperands[registerC] = 0
-    while(instructionPointer < program.size) {
-        val opcode = program[instructionPointer]
-        val operand = program[instructionPointer + 1]
-        val instruction = instructions[opcode]
-        instruction(operand)
-    }
-
-    println(output.joinToString(","))
-//    4,6,3,5,6,3,5,2,1,0.
+//    val program = parseProgram("2,4,1,3,7,5,1,5,0,3,4,3,5,5,3,0")
+//    comboOperands[registerA] = 47006051
+//    comboOperands[registerB] = 0
+//    comboOperands[registerC] = 0
+//    while(instructionPointer < program.size) {
+//        val opcode = program[instructionPointer]
+//        val operand = program[instructionPointer + 1]
+//        val instruction = instructions[opcode]
+//        instruction(operand)
+//    }
+//
+//    println(output.joinToString(","))
+////    4,6,3,5,6,3,5,2,1,0.
 
 }
 
 fun parseProgram(input: String) = input.split(',').map(String::toInt)//.chunked(2)
 
 
-
 val adv = fun (operand: Int) {
+
     val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in adv")
     val numerator = comboOperands[registerA] ?: throw Error("Not allowed value in registerA: $operand")
-    val denominator = 2 shl value - 1
-    val result = numerator / denominator
-//    if(result > Int.MAX_VALUE) throw Error("Not allowed result INT: $result")
+    val denominator = 2L shl (value.toInt() -1)
+    val result = numerator / denominator.coerceAtLeast(1)
 
-//    println("adv $result")
     comboOperands[registerA] = result
     instructionPointer += 2
 }
 
 val bxl = fun(operand: Int) {
-//    val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in bst")
     val B = comboOperands[registerB] ?: throw Error("Not allowed operand: $operand in bst")
-    val result = B xor operand
+    val result = B xor operand.toLong()
+
     comboOperands[registerB] = result
     instructionPointer += 2
 }
@@ -278,23 +276,24 @@ val bxl = fun(operand: Int) {
 val bst = fun(operand: Int) {
     val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in bst")
     val result = value % 8
+
     comboOperands[registerB] = result
     instructionPointer += 2
 }
 
 val jnz = fun(operand: Int) {
-    if(comboOperands[registerA] == 0) {
+    if(comboOperands[registerA] == 0L) {
         instructionPointer = 17
         return
     }
-    println("jnz = $operand $instructionPointer")
-    instructionPointer = operand*2
+    instructionPointer = operand
 }
 
 val bxc = fun(operand: Int) {
     val B = comboOperands[registerB] ?: throw Error("Not allowed operand: $operand in bst")
     val C = comboOperands[registerC] ?: throw Error("Not allowed operand: $operand in bst")
     val result = B xor C
+
     comboOperands[registerB] = result
     instructionPointer += 2
 }
@@ -302,39 +301,346 @@ val bxc = fun(operand: Int) {
 val out = fun (operand: Int) {
     val value = comboOperands[operand]  ?: throw Error("Not allowed operand: $operand in out")
     val result = value % 8
-    output += result
+
+    output += result.toInt()
     instructionPointer += 2
 }
 
 val bdv  = fun (operand: Int) {
     val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in bdv")
     val numerator = comboOperands[registerA] ?: throw Error("Not allowed value in registerA: $operand")
-//    val denominator = 2.0.pow(value.toDouble()).toLong()
-    val denominator = 2 shl value - 1
-    val result = numerator / denominator
-//    if(result > Int.MAX_VALUE) throw Error("Not allowed result INT: $result")
+    val denominator = 2L shl (value.toInt() -1)
+    val result = numerator / denominator.coerceAtLeast(1)
 
-    comboOperands[registerB] = result.toInt()
+    comboOperands[registerB] = result
     instructionPointer += 2
 }
 
 val cdv = fun (operand: Int) {
     val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in cdv")
     val numerator = comboOperands[registerA] ?: throw Error("Not allowed value in registerA: $operand")
-    val denominator = 2.0.pow(value.toDouble()).toLong()
-//    val denominator = 2 shl value - 1
-    val result = numerator / denominator
-//    if(result > Int.MAX_VALUE) throw Error("Not allowed result INT: $result")
+    val denominator = 2L shl (value.toInt() -1)
+    val result = numerator / denominator.coerceAtLeast(1)
 
-    comboOperands[registerC] = result.toInt()
+    comboOperands[registerC] = result
     instructionPointer += 2
 }
 
 val output = mutableListOf<Int>()
 val instructions = arrayOf(adv,bxl,bst,jnz,bxc,out,bdv,cdv)
 var instructionPointer = 0
-val comboOperands = arrayOf(0,1,2,3,0,0,0,null) // 1, 2, 3 A, B ,C, Error
+val comboOperands = arrayOf<Long?>(0,1,2,3,0,0,0,null) // 1, 2, 3 A, B ,C, Error
 val registerA = 4
 val registerB = 5
 val registerC = 6
-val cacheModulo8 = mutableMapOf<Int,Int>()
+
+fun reset() {
+    output.clear()
+    instructionPointer = 0
+    comboOperands[registerA] = 0
+    comboOperands[registerB] = 0
+    comboOperands[registerC] = 0
+}
+
+fun solveSeventeenDaySecondStar() {
+
+    //    Register A: 117440
+//    Register B: 0
+//    Register C: 0
+//
+//    Program: 0,3,5,4,3,0
+
+
+    // robi 6 pętli
+    // schodzi A do 0 wtedy stop
+    // w sumie 18 instrukcji a mamy 3 instrukcje więc kazda po 6
+    // idac od tyłu znamy wynik out kazdej petli z tego mamy liste propozycji dla A
+    // potem kazda taka propozycje trzeba reveresem sprawdzic czy jest dobra
+    // brute force
+
+//    val program = parseProgram("0,3,5,4,3,0")
+//    comboOperands[registerA] = 117440
+////    comboOperands[registerA] = 113344
+//    comboOperands[registerB] = 0
+//    comboOperands[registerC] = 0
+//
+//    while(instructionPointer < program.size) {
+//        val opcode = program[instructionPointer]
+//        val operand = program[instructionPointer + 1]
+//        println("INSTRUCTION: $opcode , $operand")
+//        val instruction = instructions[opcode]
+//        instruction(operand)
+//    }
+//
+//    println(output.joinToString(","))
+////    println(loopCounter/2)
+//    println(advC)
+
+
+
+//    tests2()
+
+//    val program = parseProgram("0,1,5,4,3,0")
+//    comboOperands[registerA] = 729
+//    comboOperands[registerB] = 0
+//    comboOperands[registerC] = 0
+//    while(instructionPointer < program.size) {
+//        val opcode = program[instructionPointer]
+//        val operand = program[instructionPointer + 1]
+//        val instruction = instructions[opcode]
+//        instruction(operand)
+//    }
+//
+//    println(output.joinToString(","))
+
+    // 6
+    // 49,53
+    // 392, 397,
+//    for(i in 392..399) {
+//        val program = parseProgram("2,4,1,3,7,5,1,5,0,3,4,3,5,5,3,0")
+//        comboOperands[registerA] = i.toLong()
+//        comboOperands[registerB] = 0
+//        comboOperands[registerC] = 0
+//        while(instructionPointer < program.size) {
+//            val opcode = program[instructionPointer]
+//            val operand = program[instructionPointer + 1]
+//            val instruction = instructions[opcode]
+//            instruction(operand)
+//        }
+//
+//        println("i: $i")
+//        println(output.joinToString(","))
+//        reset()
+//    }
+
+//    val seekRange = getPossibleRange(0)
+//    println(seekRange)
+//    val test = runProgramForRegister(seekRange,0)
+//    println(test)
+// 6
+//    val seekRange2 = getPossibleRange(48)
+//    println(seekRange2)
+//    val test2 = runProgramForRegister(seekRange2,3)
+//    println(test2)
+    // 49
+
+
+//    val seekRange3 = getPossibleRange(49*8)
+//    println(seekRange3)
+//    val test3 = runProgramForRegister(seekRange3,5)
+//    println(test3)
+    // 393
+//    runOnceForSeek(0,0)
+    // 6
+//    runOnceForSeek(6,3)
+    // 49 53
+//    runOnceForSeek(53,5)
+    // [425, 429, 430]
+
+//    runOnceForSeek(425,5)
+    // [3401, 3407]
+//    runOnceForSeek(3407,3)
+    // 25214
+    // 27262
+//    runOnceForSeek(27262,4)
+    // 201717
+    // 218101
+//    runOnceForSeek(218101,3)
+    // 1613743
+    // 1744815
+//    runOnceForSeek(1744815,0)
+    // 12909948
+    // 13958524
+//    runOnceForSeek(13958524,5)
+    // [103279586, 103279588]
+    // 13958524
+//    runOnceForSeek(111668196,1)
+    // 826236710
+    // 893345574
+//    runOnceForSeek(893345574,5)
+    // 6609893682
+    // 7146764594
+//    runOnceForSeek(7146764594,7)
+
+//    val a = "2,4,1,3,7,5,1,5,0,3,4,3,5,5,3,0".split(",").map { it.toLong() }.reversed()
+//    var n = 0L
+//    var c = 0
+//    for(s in a) {
+//        println(getPossibleRange(n*8))
+//        println("seek $s last n: $n")
+//        n = runProgramForRegister(getPossibleRange(n*8),s)
+//
+//        if(c == 5) {
+//            break;
+//        }
+//        c++
+//    }
+//    println(n)
+    val program = parseProgram("2,4,1,3,7,5,1,5,0,3,4,3,5,5,3,0").map{ it.toLong()}
+    findRecursive(program,0,0)
+}
+
+fun findRecursive(program: List<Long>, lastValue: Long,s: Long) {
+
+    if(program.isEmpty()) {
+        println("seek: $s $lastValue")
+        return
+    }
+    val seek = program.last()
+    val newProgram  = program.remove(program.lastIndex)
+//    println("newProgram: $newProgram $program")
+    val res = runOnceForSeek(lastValue,seek)
+//    println("res: $res seek: $seek")
+    for(r in res) {
+        findRecursive(newProgram,r,seek)
+    }
+}
+
+fun runOnceForSeek(prev: Long,seek: Long): List<Long> {
+    val seekRange = getPossibleRange(prev*8)
+    val res = runProgramForRegister(seekRange,seek)
+    return res
+}
+
+fun runProgramForRegister(range: LongRange, seek: Long): List<Long> {
+    val buffer = mutableListOf<Long>()
+    for(i in range) {
+        val program = parseProgram("2,4,1,3,7,5,1,5,0,3,4,3,5,5,3,0")
+        comboOperands[registerA] = i
+        comboOperands[registerB] = 0
+        comboOperands[registerC] = 0
+        while(instructionPointer < program.size) {
+            val opcode = program[instructionPointer]
+            val operand = program[instructionPointer + 1]
+            val instruction = instructions[opcode]
+            instruction(operand)
+        }
+
+        if(output.first().toLong() == seek) {
+            buffer += i
+        }
+        reset()
+    }
+    return buffer
+}
+//8, 49,
+fun getPossibleRange(i: Long): LongRange {
+//    println(maxNumberIn(i+1))
+    return i..<maxNumberIn(i+1)
+}
+
+fun maxNumberIn(i: Long): Long {
+    var seek = i;
+    while(seek < i+7) {
+        if(seek%8L == 0L) {
+            break
+        }
+        seek++
+    }
+    return seek
+}
+
+fun tests2() {
+    // What numbers %8 = 2 ?
+    // for N < 8 N = 2
+    // for N > 8 N = N*n + 2
+
+    //    A/2^(3) = 0
+
+    // 30 opcode 3 operand 0 jmp,Register A = 0 ends program
+    // 54 opcode 5 operand 4 -> out, A%8
+    // 03 opcode 0 operand 3 -> adv, A/2^(3) truncated
+
+    // 0,3,5,4,3,0
+//    val n1 = getIntFromModuleSeq(8,2).take(3).toList()
+//    println(n1)
+
+
+    // adv operand 3 -> A/2^3 = A/8 = N1 -> A = 8*N1
+    // N1%8 = 3,0
+
+
+    // out 0 -> X%8 == 0 ->> 0 || 8...
+    //   ...
+    // out 3 -> x%8 == 3 ->> 3 || 11 || 19 ...
+    //   ...
+    // out 5 -> x%8 == 5 ->> 5 || 13 || 21 || 29...
+    //   ...
+    // out 4 -> x%8 == 4 ->> 4 || 12 || 20 || 28 || 36...
+    //   ...
+    // out 3 -> x%8 == 3 ->> 3 || 11 || 19 || 27 || 35 || 43...
+    //   ... adv() --> A = 8
+    // out 0 -> x%8 == 0 ->> 0 || 8  || 16 || 24 || 32 || 40 || 48...
+
+//    invADV = A/2^(CO)
+}
+
+//fun getIntFromModuleSeq(m: Int, rest: Int) = sequence {
+//    var n = 0
+//    while(true) {
+//        yield(m*n++ + rest)
+//    }
+//}
+
+// bierzesz pierwsza
+// 0 tylko modulo % daje 0, więc A = 0
+// robisz inv adv -> musisz znalesc licznik
+//  3 = 28/(2^3)
+// 3 = 2
+
+// 2,4, 1,3, 7,5, 1,5 ,0,3, 4,3, 5,5 ,3,0
+// (bst op4)   (bxl op 3)   (cdv op5)    (bxl op5)   (adv op3)    (bxc op3)   (out op5)     (jnz op0)
+// op(4)=A->B  op(3)=3->B   op(5)=B->C   op(5)=5->B  op(3)=3->A  op(3)=3->B    op(5)=B->B    jmp to 0
+// --------------
+// last
+// (5,4) -> out (op4) = 0 -> out = A/8 -> A = 0 (bo na tej liczbie jestesmy )
+// wiemy
+// (0,3) -> adv (op3) = 0 -> adv = A/2^3 -> A = 3 (bo nastepny sie zaczyna od 3)
+//
+
+// "0,3,5,4,3,0"
+// (adv op3) -> (out op4) -> (jnz op0)
+// 3,0 - 0*8+0 =0  0 = 3/8 -- A = 0
+//
+// A = prevA % 8
+// prevA = A*8 + nextI
+// Czy A zalezy od B i C ?
+
+
+//  denominator = 8, nominator = prevA
+//  A = N/D
+//  0 = X/8 = 0 1..7
+// adv 1 = X/8 -> X -> 8
+// adv 8 = X/8 -> X -> 64
+
+
+//val program = parseProgram("2,4, 1,3, 7,5, 1,5, 0,3, 4,3, 5,5 ,3,0")
+// A=X
+// 2,4 -> bst A -> X%8 -> writes to B -> B=X%8
+// 1,3 -> bxl 3 -> B XOR 3 -> write to B -> B =  (X%8) XOR 3
+// 7,5 -> cdv 5 -> trunc(X/2**B) -> write to C -> C = trunc(X/2**B)
+// 1,5 -> bxl B -> B XOR 5 -> write to B -> B = B XOR 5 -> ((X%8) XOR 3) XOR 5
+// 0,3 -> adv 3 -> trunc(X/2**3) -> write to A = X = trunc(X/2**3)
+// 4,3 -> bxc 3 -> B XOR C -> write to B ->  B XOR C -> (((X%8) XOR 3) XOR 5) XOR trunc(X/2**B)
+// 5,5 -> out B -> printl B%8
+// 3,0 -> jmp 0
+
+// B%8 = 0 -> B = 0
+// B XOR C -> B = C = 0, 8, 16, 24 ..
+// A = 0 -> 0 = trunc(X/8) A = 0..7 -> A
+// B XOR 5 -> 0,8,16,24.. = B XOR 5 -> 5,13,21... -> B
+// trunc(X/2**B) -> C = trunc(X/2**B) -> C = trunc(0..7/ 2^(5..13..21..))
+//
+// too low 16777216
+// Int.MAX too loow 2147483647
+
+// wynik to jakaś liczba ktorej modulo
+// przejechaliśmy 8 pętli gdzie w kazdej A został podzielony przez 8 az do 0
+// ostatni to musialbyc (0..7)
+
+// przedostatni to musialbyc (0..7) = trunc(X/8)
+// 1 = X/8 => X = 8 .. 15
+// 2 = X/8 => X = 16 .. 23
+// ..
+// 7 = X/8 => X = 56 .. 63
+
