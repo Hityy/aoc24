@@ -240,7 +240,7 @@ fun test1() {
 
 }
 
-fun parseProgram(input: String) = input.split(',').map(String::toInt)//.chunked(2)
+fun parseProgram(input: String) = input.split(',').map(String::toInt)
 
 val adv = fun (operand: Int) {
     val value = comboOperands[operand] ?: throw Error("Not allowed operand: $operand in adv")
