@@ -1,7 +1,9 @@
-import days.seventeen.solveSeventeenDaySecondStar
+import days.eightteen.solveEightteenDayFirstStar
+import days.eightteen.solveEightteenDaySecondStar
+import days.sixteen.solveSixteenDayFirstStar
 
 fun main() {
-    solveSeventeenDaySecondStar()
+    solveEightteenDaySecondStar()
 }
 
 val <T, A> Pair<T, A>.row: T
